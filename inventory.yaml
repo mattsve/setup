@@ -1,0 +1,12 @@
+k3s_nodes:
+  hosts:
+    vetinari:
+      ansible_user: ansible
+      ansible_host: vetinari.hem.ingenstans.se
+      ansible_python_interpreter: /usr/bin/python3
+      k3s_control_node: true
+      k3s_agent:
+        node-label:
+         - "zwave=true"
+         - "conbee=true"
+         - "rfxtrx=true"

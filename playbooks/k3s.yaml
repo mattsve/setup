@@ -1,0 +1,14 @@
+- name: Build a k3s cluster
+  hosts: k3s_nodes
+  vars:
+    k3s_become_for_all: true
+    k3s_release_version: v1.19.4+k3s1
+    k3s_server:
+      cluster-cidr: 172.16.0.0/16
+      service-cidr: 172.17.0.0/16
+      cluster-dns: '172.17.0.10'
+      flannel-backend: 'ipsec'
+      disable:
+       - servicelb
+  roles:
+    - xanmanning.k3s
