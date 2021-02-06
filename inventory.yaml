@@ -10,3 +10,10 @@ k3s_nodes:
          - "zwave=true"
          - "conbee=true"
          - "rfxtrx=true"
+    dibbler:
+      ansible_user: ansible
+      ansible_host: dibbler.hem.ingenstans.se
+      ansible_python_interpreter: /usr/bin/python3
+      k3s_agent:
+        node-taint:
+          - "node=small:NoSchedule"
