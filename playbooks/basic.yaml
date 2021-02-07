@@ -45,6 +45,7 @@
           when: result is changed
           shell:
             cmd: 'udevadm control --reload-rules && udevadm trigger'
+            
     - name: Enable cgroup via boot commandline if not already enabled for Ubuntu on a Raspberry Pi
       when: ansible_facts['distribution'] == 'Ubuntu' and raspberry_pi | default(false)
       lineinfile:
