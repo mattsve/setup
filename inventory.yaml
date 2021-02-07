@@ -8,12 +8,13 @@ k3s_nodes:
       k3s_agent:
         node-label:
          - "zwave=true"
-         - "conbee=true"
-         - "rfxtrx=true"
     dibbler:
       ansible_user: ansible
       ansible_host: dibbler.hem.ingenstans.se
       ansible_python_interpreter: /usr/bin/python3
       k3s_agent:
+        node-label:
+          - "rfxtrx=true"
+          - "conbee=true"
         node-taint:
           - "node=small:NoSchedule"
