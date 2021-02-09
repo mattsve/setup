@@ -16,5 +16,6 @@ k3s_nodes:
         node-label:
           - "rfxtrx=true"
           - "conbee=true"
+          - "zwavejs=true"
         node-taint:
           - "node=small:NoSchedule"
