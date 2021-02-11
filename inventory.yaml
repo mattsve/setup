@@ -1,3 +1,9 @@
+ungrouped:
+  hosts:
+    octoprint:
+      ansible_user: ansible
+      ansible_host: octoprint.hem.ingenstans.se
+
 k3s_nodes:
   hosts:
     vetinari:

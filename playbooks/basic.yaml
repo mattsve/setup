@@ -25,14 +25,22 @@
         grep_cpuinfo_raspberrypi.rc == 0 or grep_device_tree_model_raspberrypi.rc == 0
 
     - name: check for poe hat
-      slurp:
-        src: /sys/class/thermal/cooling_device0/type
-      register: cooling_device
-      ignore_errors: true
-
+      block:
+        - name: checking for cooling device
+          stat:
+            path: /sys/class/thermal/cooling_device0/type
+          register: stat_result
+        - name: gathering facts about cooling device
+          when: stat_result.stat.exists
+          slurp:
+            src: /sys/class/thermal/cooling_device0/type
+          register: cooling_device
+      ignore_errors: true    
+    
     - name: install fan rules for poe hat
-      when: cooling_device.content | b64decode | trim == 'rpi-poe-fan' and 
-            ansible_facts['distribution'] == 'Ubuntu' 
+      when: cooling_device.skipped is not defined and
+            cooling_device.content | b64decode | trim == 'rpi-poe-fan'
+            and ansible_facts['distribution'] == 'Ubuntu' 
             and ansible_facts['distribution_major_version'] == '20'
       block:
         - name: copy udev rule file
