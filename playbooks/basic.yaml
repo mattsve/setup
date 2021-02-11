@@ -45,7 +45,7 @@
       block:
         - name: copy udev rule file
           copy:
-            src: '../files/50-rpi-fan.rules'
+            src: '50-rpi-fan.rules'
             dest: '/etc/udev/rules.d/50-rpi-fan.rules'
             mode: 'u=rw,go=r'
           register: result
