@@ -7,6 +7,7 @@
           - python3-virtualenv
           - python3-pip
           - python3-dev
+          - haproxy
         state: present    
 
     - name: Add octoprint user
@@ -35,3 +36,68 @@
             name: octoprint
             state: started
             enabled: true
+    
+    - name: HAProxy
+      block:
+        - name: Copy config
+          copy:
+            src: octoprint/haproxy.cfg
+            dest: /etc/haproxy/haproxy.cfg
+            owner: root
+            group: root
+            mode: '0644'
+        - name: Enable service
+          systemd:
+            name: haproxy
+            state: started
+            enabled: true
+
+    - name: Docker
+      block:
+        - name: Install required packages
+          package:
+            name:
+              - apt-transport-https
+              - ca-certificates
+              - curl
+              - gnupg-agent
+              - software-properties-common
+            state: present
+        - name: Add apt key
+          ansible.builtin.apt_key:
+            id: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
+            url: https://download.docker.com/linux/ubuntu/gpg
+            state: present
+        - name: Add apt repository
+          apt_repository:
+            repo: deb [arch=arm64] https://download.docker.com/linux/ubuntu    focal    stable
+            state: present
+        - name: install docker
+          package:
+            name:
+              - docker-ce 
+              - docker-ce-cli 
+              - containerd.io
+            state: present
+        - name: Install docker-compose
+          pip:
+            name: docker-compose
+
+    - name: Enable camera in firmware
+      block:
+        - name: start-x
+          lineinfile:
+            path: /boot/firmware/usercfg.txt
+            line: start_x=1
+            state: present
+          notify: reboot
+        - name: gpu-mem
+          lineinfile:
+            path: /boot/firmware/usercfg.txt
+            line: gpu_mem=128
+            state: present
+          notify: reboot
+
+  handlers:
+    - name: reboot
+      reboot:
