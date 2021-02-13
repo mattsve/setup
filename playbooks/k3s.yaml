@@ -10,5 +10,27 @@
       flannel-backend: 'ipsec'
       disable:
        - servicelb
-  roles:
-    - xanmanning.k3s
+  tasks:
+    - name: copy manifests
+      when: k3s_control_node is defined and
+            k3s_control_node == True
+      become: yes
+      block:
+        - name: create rancher directory
+          ansible.builtin.file:
+            path: /var/lib/rancher/
+            state: directory
+            mode: '0755'
+        - name: create manifests directory
+          ansible.builtin.file:
+            path: /var/lib/rancher/k3s/server/manifests/
+            state: directory
+            mode: '0700'
+        - name: copy traefik config
+          copy:
+            src: k3s/traefik-config.yaml
+            dest: /var/lib/rancher/k3s/server/manifests/traefik-config.yaml
+            mode: '0644'
+    - name: k3s-role
+      import_role:
+        name: xanmanning.k3s
