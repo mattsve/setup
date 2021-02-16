@@ -7,7 +7,7 @@
       cluster-cidr: 172.31.0.0/16
       service-cidr: 172.30.0.0/16
       cluster-dns: '172.30.0.10'
-      flannel-backend: 'ipsec'
+      flannel-backend: 'vxlan'
       disable:
        - servicelb
   tasks:
