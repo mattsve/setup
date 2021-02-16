@@ -31,6 +31,24 @@
             src: k3s/traefik-config.yaml
             dest: /var/lib/rancher/k3s/server/manifests/traefik-config.yaml
             mode: '0644'
+      
+    - name: create /k3s-storage
+      become: yes
+      block:
+        - name: crete with zfs
+          when: zpool_storage is defined
+          community.general.zfs:
+            name: '{{ zpool_storage }}/k3s-storage'
+            state: present
+            extra_zfs_properties:
+                mountpoint: /k3s-storage
+        - name: create ordinary folder
+          when: zpool_storage is not defined
+          ansible.builtin.file:
+            path: /k3s-storage
+            state: directory
+            mode: '0755'
+
     - name: k3s-role
       import_role:
         name: xanmanning.k3s

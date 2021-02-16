@@ -1,1 +1,7 @@
-- src: xanmanning.k3s
+roles:
+  - name: xanmanning.k3s
+    version: v2.5.3
+
+collections:
+  - name: community.general
+    version: 2.1.0

@@ -11,7 +11,8 @@ k3s_nodes:
       ansible_user: ansible
       ansible_host: vetinari.hem.ingenstans.se
       ansible_python_interpreter: /usr/bin/python3
-      k3s_control_node: true      
+      k3s_control_node: true
+      zpool_storage: main
     dibbler:
       ansible_user: ansible
       ansible_host: dibbler.hem.ingenstans.se
