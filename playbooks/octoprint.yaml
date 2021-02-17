@@ -83,7 +83,7 @@
           pip:
             name: docker-compose
 
-    - name: Enable camera in firmware
+    - name: Enable camera
       block:
         - name: start-x
           lineinfile:
@@ -97,6 +97,10 @@
             line: gpu_mem=128
             state: present
           notify: reboot
+        - name: packages
+          package:
+            name:
+              - libraspberrypi-bin
 
   handlers:
     - name: reboot
