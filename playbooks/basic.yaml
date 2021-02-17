@@ -63,6 +63,17 @@
         line: '\1 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory'
       notify: reboot
 
+    - name: setup rsyslog
+      copy:
+        src: '05-graylog.conf'
+        dest: '/etc/rsyslog.d/05-graylog.conf'
+        mode: 'u=rw,go=r'
+      notify: rsyslog
+
   handlers:
     - name: reboot
       reboot:
+    - name: rsyslog
+      service:
+        name: rsyslog
+        state: restarted
