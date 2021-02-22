@@ -87,13 +87,13 @@
       block:
         - name: start-x
           lineinfile:
-            path: /boot/firmware/usercfg.txt
+            path: /boot/firmware/config.txt
             line: start_x=1
             state: present
           notify: reboot
         - name: gpu-mem
           lineinfile:
-            path: /boot/firmware/usercfg.txt
+            path: /boot/firmware/config.txt
             line: gpu_mem=128
             state: present
           notify: reboot
