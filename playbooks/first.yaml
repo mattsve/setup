@@ -1,0 +1,27 @@
+- hosts: all
+  become: true
+  tasks:
+    - name: install sudo
+      package:
+        name: sudo
+        state: present
+    - name: Add ansible user
+      ansible.builtin.user:
+        name: ansible
+        comment: ansible user
+        password_lock: true
+    - name: Set authorized_keys for ansible user
+      ansible.posix.authorized_key:
+        user: ansible
+        state: present
+        key: '{{ item }}'
+      with_file:
+        - public_keys/wopr_id_rsa.pub
+    - name: Ansible user sudo no pwd
+      ansible.builtin.lineinfile:
+          path: /etc/sudoers.d/nopassword
+          line: ansible ALL=(ALL) NOPASSWD:ALL
+          create: true
+          owner: root
+          mode: 0644
+          state: present

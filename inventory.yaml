@@ -4,7 +4,11 @@ ungrouped:
       ansible_user: ansible
       ansible_host: octoprint.hem.ingenstans.se
       ansible_python_interpreter: /usr/bin/python3
-
+    atuin:
+      ansible_user: ansible
+      ansible_host: atuin.hem.ingenstans.se
+      ansible_python_interpreter: /usr/bin/python3
+      
 k3s_nodes:
   hosts:
     vimes:
