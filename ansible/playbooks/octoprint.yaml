@@ -52,6 +52,25 @@
             state: started
             enabled: true
 
+    - name: Enable camera
+      block:
+        - name: start-x
+          lineinfile:
+            path: /boot/firmware/config.txt
+            line: start_x=1
+            state: present
+          notify: reboot
+        - name: gpu-mem
+          lineinfile:
+            path: /boot/firmware/config.txt
+            line: gpu_mem=128
+            state: present
+          notify: reboot
+        - name: packages
+          package:
+            name:
+              - libraspberrypi-bin
+
     - name: Docker
       block:
         - name: Install required packages
@@ -79,29 +98,32 @@
               - docker-ce-cli 
               - containerd.io
             state: present
-        - name: Install docker-compose
-          pip:
-            name: docker-compose
 
-    - name: Enable camera
+    - name: Restreamer
       block:
-        - name: start-x
-          lineinfile:
-            path: /boot/firmware/config.txt
-            line: start_x=1
-            state: present
-          notify: reboot
-        - name: gpu-mem
-          lineinfile:
-            path: /boot/firmware/config.txt
-            line: gpu_mem=128
-            state: present
-          notify: reboot
-        - name: packages
-          package:
-            name:
-              - libraspberrypi-bin
-
+        - name: restreamer db directory
+          ansible.builtin.file:
+            path: /var/lib/restreamer/lib
+            state: directory
+            mode: '0755'
+        - name: restreamer container
+          community.docker.docker_container:
+            name: restreamer
+            image: datarhei/restreamer-aarch64:0.6.8
+            restart_policy: unless-stopped
+            state: started
+            ports:
+              - "8080:8080"
+            privileged: true
+            volumes:
+              - /usr:/opt/vc
+              - /var/lib/restreamer:/restreamer/db
+            env:
+              RS_MODE: RASPICAM
+              RS_USERNAME: username
+              RS_PASSWORD: password
+              LD_LIBRARY_PATH: /restreamer/db/lib
+              RS_LOGLEVEL: '4'
   handlers:
     - name: reboot
       reboot:
