@@ -1,0 +1,8 @@
+- hosts: atuin
+  become: true
+  tasks:
+    - name: Create template
+      ansible.builtin.script:
+        cmd: proxmox/createTemplate.sh
+      register: template
+      changed_when: "'Template created' in template.stdout"
