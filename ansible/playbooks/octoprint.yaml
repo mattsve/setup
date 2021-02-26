@@ -8,6 +8,7 @@
           - python3-pip
           - python3-dev
           - haproxy
+          - ffmpeg
         state: present    
 
     - name: Add octoprint user
@@ -16,6 +17,14 @@
         groups: tty,dialout
         password_lock: true
 
+    - name: octoprint user sudo no pwd
+      ansible.builtin.lineinfile:
+          path: /etc/sudoers.d/nopassword
+          line: 'octoprint ALL=(ALL) NOPASSWD: /usr/bin/systemctl poweroff,/usr/bin/systemctl reboot,/usr/bin/systemctl restart octoprint'
+          create: true
+          owner: root
+          mode: 0644
+          state: present
     - name: Install octoprint
       pip:
         name: octoprint
@@ -70,60 +79,23 @@
           package:
             name:
               - libraspberrypi-bin
-
-    - name: Docker
+    
+    - name: mjpg-streamer
       block:
-        - name: Install required packages
-          package:
+        - name: install mjpg-streamer
+          community.general.snap:
             name:
-              - apt-transport-https
-              - ca-certificates
-              - curl
-              - gnupg-agent
-              - software-properties-common
+              - mjpg-streamer
+        - name: allow mjpg-streamer access to camera
+          command: snap connect mjpg-streamer:camera
+        - name: enable mjpg-streamer daemon
+          ansible.builtin.lineinfile:
+            path: /var/snap/mjpg-streamer/current/config
+            line: DAEMON="true"
             state: present
-        - name: Add apt key
-          ansible.builtin.apt_key:
-            id: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
-            url: https://download.docker.com/linux/ubuntu/gpg
-            state: present
-        - name: Add apt repository
-          apt_repository:
-            repo: deb [arch=arm64] https://download.docker.com/linux/ubuntu    focal    stable
-            state: present
-        - name: install docker
-          package:
-            name:
-              - docker-ce 
-              - docker-ce-cli 
-              - containerd.io
-            state: present
-
-    - name: Restreamer
-      block:
-        - name: restreamer db directory
-          ansible.builtin.file:
-            path: /var/lib/restreamer/lib
-            state: directory
-            mode: '0755'
-        - name: restreamer container
-          community.docker.docker_container:
-            name: restreamer
-            image: datarhei/restreamer-aarch64:0.6.8
-            restart_policy: unless-stopped
-            state: started
-            ports:
-              - "8080:8080"
-            privileged: true
-            volumes:
-              - /usr:/opt/vc
-              - /var/lib/restreamer:/restreamer/db
-            env:
-              RS_MODE: RASPICAM
-              RS_USERNAME: username
-              RS_PASSWORD: password
-              LD_LIBRARY_PATH: /restreamer/db/lib
-              RS_LOGLEVEL: '4'
+            regexp: '^DAEMON='
+        - name: start mjpg-streamer
+          command: snap restart mjpg-streamer
   handlers:
     - name: reboot
       reboot:
