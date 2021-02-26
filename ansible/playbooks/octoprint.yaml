@@ -20,7 +20,7 @@
     - name: octoprint user sudo no pwd
       ansible.builtin.lineinfile:
           path: /etc/sudoers.d/nopassword
-          line: 'octoprint ALL=(ALL) NOPASSWD: /usr/bin/systemctl poweroff,/usr/bin/systemctl reboot,/usr/bin/systemctl restart octoprint'
+          line: 'octoprint ALL=(ALL) NOPASSWD: /usr/bin/systemctl poweroff,/usr/bin/systemctl reboot,/usr/bin/systemctl restart octoprint,/usr/bin/vcgencmd get_throttled'
           create: true
           owner: root
           mode: 0644
