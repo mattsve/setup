@@ -16,6 +16,7 @@ k3s_nodes:
       ansible_host: 10.0.1.5
       ansible_python_interpreter: /usr/bin/python3
       k3s_control_node: true
+      disk_storage: /dev/sdb
     dibbler:
       ansible_user: ansible
       ansible_host: dibbler.hem.ingenstans.se

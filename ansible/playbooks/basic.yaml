@@ -1,6 +1,26 @@
 - hosts: all
   become: true
   tasks:
+    - name: Add mattias user
+      ansible.builtin.user:
+        name: mattias
+        comment: Mattias Svensson
+    - name: Set authorized_keys for mattias user
+      ansible.posix.authorized_key:
+        user: mattias
+        state: present
+        key: '{{ item }}'
+      with_file:
+        - public_keys/wopr_id_rsa.pub
+    - name: mattias user sudo no pwd
+      ansible.builtin.lineinfile:
+          path: /etc/sudoers.d/nopassword
+          line: mattias ALL=(ALL) NOPASSWD:ALL
+          create: true
+          owner: root
+          mode: 0644
+          state: present
+
     - name: install mosh
       package:
         name: mosh

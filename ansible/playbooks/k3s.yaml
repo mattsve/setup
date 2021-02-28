@@ -48,7 +48,30 @@
             path: /k3s-storage
             state: directory
             mode: '0755'
-
+        - name: partition disk
+          when: disk_storage is defined
+          block:
+            - name: partition disk
+              community.general.parted:
+                device: {{ disk_storage }}
+                fs_type: ext4
+                label: gpt
+                name: primary
+                number: 1
+            - name: make filesystem
+              community.general.filesystem:
+                dev: {{ disk_storage }}1
+                fstype: ext4
+            - name: mount disk
+              ansible.posix.mount:
+                boot: true
+                dump: 0
+                fstype: ext4
+                passno: 2
+                path: /k3s-storage
+                src: {{ disk_storage }}1
+                state: mounted
+            
     - name: k3s-role
       import_role:
         name: xanmanning.k3s

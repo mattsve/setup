@@ -5,6 +5,10 @@ terraform {
       version = "2.6.7"
     }
   }
+  backend "http" {
+    address = "https://l-space.hem.ingenstans.se:5006/system/terraform/terraform.tfstate"
+    update_method = PUT
+  }
 }
 
 provider "proxmox" {
