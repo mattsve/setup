@@ -7,7 +7,7 @@ terraform {
   }
   backend "http" {
     address = "https://l-space.hem.ingenstans.se:5006/system/terraform/terraform.tfstate"
-    update_method = PUT
+    update_method = "PUT"
   }
 }
 

@@ -1,6 +1,13 @@
 - hosts: all
   become: true
   tasks:
+    - name: proxmox agent
+      when: proxmox_agent is defined and
+            proxmox_agent
+      package:
+        name: qemu-guest-agent
+        state: present
+        
     - name: Add mattias user
       ansible.builtin.user:
         name: mattias
