@@ -4,9 +4,16 @@
     - name: proxmox agent
       when: proxmox_agent is defined and
             proxmox_agent
-      package:
-        name: qemu-guest-agent
-        state: present
+      block:
+        - name: install package
+          package:
+            name: qemu-guest-agent
+            state: present
+        - name: Enable service
+          systemd:
+            name: qemu-guest-agent
+            state: started
+            enabled: true
         
     - name: Add mattias user
       ansible.builtin.user:
