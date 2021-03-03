@@ -104,6 +104,71 @@
         mode: 'u=rw,go=r'
       notify: rsyslog
 
+    - name: setup nut
+      when: nut_server is defined and
+            nut_server
+      block:
+        - name: nut package
+          package:
+            name: nut
+            state: present
+        - name: netserver mode
+          ansible.builtin.lineinfile:
+            path: /etc/nut/nut.conf
+            line: MODE=netserver
+            state: present
+            regexp: '^MODE='
+        - name: setup ups
+          ansible.builtin.blockinfile:
+            path: /etc/nut/ups.conf
+            block: |
+              [ups]
+                driver = usbhid-ups
+                port = auto
+                desc = "Server UPS"
+        - name: setup users
+          ansible.builtin.blockinfile:
+            path: /etc/nut/upsd.users
+            block: |
+              [monuser]
+                password = secret
+                upsmon slave
+
+              [mainuser]
+                password = secret2
+                upsmon master
+        - name: setup upsmon.conf
+          ansible.builtin.lineinfile:
+            path: /etc/nut/upsmon.conf
+            line: MONITOR ups@localhost 1 mainuser secret2 master
+            state: present
+        - name: setup upsd.conf
+          ansible.builtin.blockinfile:
+            path: /etc/nut/upsd.conf
+            block: |
+              LISTEN 127.0.0.1
+              LISTEN 0.0.0.0
+        - name: copy udev rule
+          ansible.builtin.copy:
+            src: /lib/udev/rules.d/62-nut-usbups.rules
+            dest: /etc/udev/rules.d
+            remote_src: true
+          register: result
+        - name: reload udev rules
+          when: result is changed
+          shell:
+            cmd: 'udevadm control --reload-rules && udevadm trigger'
+        - name: enable nut-server
+          systemd:
+            name: nut-server
+            state: started
+            enabled: true
+        - name: enable nut-monitor
+          systemd:
+            name: nut-monitor
+            state: started
+            enabled: true
+        
   handlers:
     - name: reboot
       reboot:
