@@ -14,11 +14,12 @@
             name: qemu-guest-agent
             state: started
             enabled: true
-        
+
     - name: Add mattias user
       ansible.builtin.user:
         name: mattias
         comment: Mattias Svensson
+      register: mattias_user_registered
     - name: Set authorized_keys for mattias user
       ansible.posix.authorized_key:
         user: mattias
@@ -34,6 +35,46 @@
           owner: root
           mode: 0644
           state: present
+    - name: Checkout dotfiles
+      when: ansible_distribution == 'Ubuntu'
+      ansible.builtin.git:
+        repo: 'https://github.com/mattsve/dotfiles.git'
+        dest: "{{ mattias_user_registered.home }}/.dotfiles"
+      become_user: mattias
+
+    - name: Add powershell
+      when: ansible_distribution == 'Ubuntu' and 
+            ansible_distribution_version == '20.04' and
+            ansible_architecture == 'x86_64'
+      block:
+        - name: install packages
+          package:
+            name:
+              - apt-transport-https 
+              - software-properties-common
+        - name: Install keys
+          apt:
+            deb: https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
+        - name: Add repository
+          ansible.builtin.command: add-apt-repository universe
+          changed_when: false
+        - name: Apt update
+          ansible.builtin.command: apt update
+          changed_when: false
+        - name: Install powershell
+          package:
+            name:
+              - powershell
+        - name: run bootstrap.ps1
+          command: 
+            cmd: pwsh -NoProfile -NonInteractive -File "{{ mattias_user_registered.home }}/.dotfiles/bootstrap.ps1"
+            chdir: "{{ mattias_user_registered.home }}/.dotfiles"
+            creates: "{{ mattias_user_registered.home }}/.poshthemes"
+          become_user: mattias
+        - name: set shell
+          user:
+            name: mattias
+            shell: /usr/bin/pwsh
 
     - name: install mosh
       package:
