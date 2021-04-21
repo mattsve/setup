@@ -10,7 +10,7 @@ resource "proxmox_vm_qemu" "vimes" {
   sockets           = "1"
   cpu               = "host"
   memory            = 16384
-  balloon           = 1
+  balloon           = 0
   scsihw            = "virtio-scsi-pci"
   bootdisk          = "scsi0"
   agent             = 1
@@ -62,7 +62,7 @@ resource "proxmox_vm_qemu" "lu-tze" {
   sockets           = "1"
   cpu               = "host"
   memory            = 4096
-  balloon           = 1
+  balloon           = 2048
   scsihw            = "virtio-scsi-pci"
   bootdisk          = "scsi0"
   agent             = 1
