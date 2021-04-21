@@ -11,6 +11,11 @@
       disable:
        - servicelb
   tasks:
+    - name: clean inventory.txt
+      become: yes
+      file:
+        path: /tmp/inventory.txt
+        state: absent
     - name: copy manifests
       when: k3s_control_node is defined and
             k3s_control_node == True
@@ -53,23 +58,24 @@
           block:
             - name: partition disk
               community.general.parted:
-                device: {{ disk_storage }}
+                device: "{{ disk_storage }}"
                 fs_type: ext4
                 label: gpt
                 name: primary
                 number: 1
+                state: present
             - name: make filesystem
               community.general.filesystem:
-                dev: {{ disk_storage }}1
+                dev: "{{ disk_storage }}1"
                 fstype: ext4
             - name: mount disk
               ansible.posix.mount:
                 boot: true
-                dump: 0
+                dump: '0'
                 fstype: ext4
-                passno: 2
+                passno: '2'
                 path: /k3s-storage
-                src: {{ disk_storage }}1
+                src: "{{ disk_storage }}1"
                 state: mounted
             
     - name: k3s-role

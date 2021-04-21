@@ -49,9 +49,10 @@ resource "proxmox_vm_qemu" "vimes" {
   EOF
 }
 
-resource "proxmox_vm_qemu" "iot-test" {
+
+resource "proxmox_vm_qemu" "lu-tze" {
   count             = 1
-  name              = "iot-test-${count.index}"
+  name              = "lu-tze"
   target_node       = "atuin"
 
   clone             = "ubuntu-2004-cloudinit-template"
@@ -67,7 +68,7 @@ resource "proxmox_vm_qemu" "iot-test" {
   agent             = 1
 
   disk {
-    size            = "20G"
+    size            = "42G"
     type            = "scsi"
     storage         = "local-zfs"
   }
@@ -75,11 +76,10 @@ resource "proxmox_vm_qemu" "iot-test" {
   network {
     model           = "virtio"
     bridge          = "vmbr0"
-    tag             = 30
   }
 
   # Cloud Init Settings
-  ipconfig0         = "ip=10.30.3.11${count.index + 1}/22,gw=10.30.0.1"
+  ipconfig0         = "ip=dhcp"
   ciuser = "ansible"
   sshkeys = <<EOF
   %{ for ssh_key in var.ssh_keys ~}

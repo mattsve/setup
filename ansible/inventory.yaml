@@ -9,9 +9,9 @@ ungrouped:
       ansible_host: atuin.hem.ingenstans.se
       ansible_python_interpreter: /usr/bin/python3
       nut_server: true
-    iot-test-01:
+    lu-tze:
       ansible_user: ansible
-      ansible_host: 10.30.3.111
+      ansible_host: lu-tze.hem.ingenstans.se
       ansible_python_interpreter: /usr/bin/python3
       proxmox_agent: true
       
