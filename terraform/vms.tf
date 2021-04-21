@@ -61,7 +61,7 @@ resource "proxmox_vm_qemu" "lu-tze" {
   cores             = 2
   sockets           = "1"
   cpu               = "host"
-  memory            = 2048
+  memory            = 4096
   balloon           = 1
   scsihw            = "virtio-scsi-pci"
   bootdisk          = "scsi0"
