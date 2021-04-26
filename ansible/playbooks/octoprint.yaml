@@ -9,6 +9,7 @@
           - python3-dev
           - haproxy
           - ffmpeg
+          - avrdude
         state: present    
 
     - name: Add octoprint user
