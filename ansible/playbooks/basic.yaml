@@ -45,6 +45,12 @@
         dest: "{{ mattias_user_registered.home }}/.dotfiles"
       become_user: mattias
 
+    - name: install pip3
+      package:
+        name:
+          - python3-pip
+          - python3-dev
+
     - name: Add powershell
       when: ansible_distribution == 'Ubuntu' and 
             ansible_distribution_version == '20.04' and
@@ -78,6 +84,9 @@
           user:
             name: mattias
             shell: /usr/bin/pwsh
+        - name: install thefuck
+          pip:
+            name: thefuck
 
     - name: install mosh
       package:
