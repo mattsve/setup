@@ -1,0 +1,5 @@
+SUBSYSTEM=="video4linux", \
+SUBSYSTEMS=="usb", \
+ATTRS{idVendor}=="046d", \
+ATTRS{idProduct}=="085c", \
+PROGRAM="/usr/bin/v4l2-ctl --set-ctrl power_line_frequency=1 --set-ctrl=power_line_frequency=1 --set-ctrl=focus_auto=0 --set-ctrl=focus_absolute=30 --set-ctrl=white_balance_temperature_auto=0 --set-ctrl=white_balance_temperature=3000 --set-ctrl=zoom_absolute=100 --device /dev/%k"

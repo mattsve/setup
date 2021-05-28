@@ -10,6 +10,7 @@
           - haproxy
           - ffmpeg
           - avrdude
+          - v4l-utils
         state: present    
 
     - name: Add octoprint user
@@ -97,6 +98,17 @@
             regexp: '^DAEMON='
         - name: start mjpg-streamer
           command: snap restart mjpg-streamer
+
+    - name: copy udev rule file
+      copy:
+        src: 'octoprint/99-local-webcam.rules'
+        dest: '/etc/udev/rules.d/99-local-webcam.rules'
+        mode: 'u=rw,go=r'
+      register: result
+    - name: reload udev rules
+      when: result is changed
+      shell:
+        cmd: 'udevadm control --reload-rules && udevadm trigger'
   handlers:
     - name: reboot
       reboot:
