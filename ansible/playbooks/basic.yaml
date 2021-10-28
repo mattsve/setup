@@ -30,6 +30,7 @@
         - public_keys/hex.pub
         - public_keys/ipad.pub
         - public_keys/lu-tze.pub
+        - public_keys/necronomicon.pub
     - name: mattias user sudo no pwd
       ansible.builtin.lineinfile:
           path: /etc/sudoers.d/nopassword
