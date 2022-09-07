@@ -27,9 +27,7 @@
         key: '{{ item }}'
       with_file:
         - public_keys/wopr.pub
-        - public_keys/hex.pub
-        - public_keys/ipad.pub
-        - public_keys/lu-tze.pub
+        - public_keys/hex.pub        
         - public_keys/necronomicon.pub
     - name: mattias user sudo no pwd
       ansible.builtin.lineinfile:
@@ -54,7 +52,6 @@
 
     - name: Add powershell
       when: ansible_distribution == 'Ubuntu' and 
-            ansible_distribution_version == '20.04' and
             ansible_architecture == 'x86_64'
       block:
         - name: install packages
@@ -62,9 +59,9 @@
             name:
               - apt-transport-https 
               - software-properties-common
-        - name: Install keys
+        - name: Install microsoft packages          
           apt:
-            deb: https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
+            deb: https://packages.microsoft.com/config/ubuntu/{{ ansible_distribution_version }}/packages-microsoft-prod.deb        
         - name: Add repository
           ansible.builtin.command: add-apt-repository universe
           changed_when: false
@@ -94,10 +91,28 @@
         name: mosh
         state: present
 
-    - name: install lastpass-cli
-      package:
-        name: lastpass-cli
-        state: present
+    - name: install 1password cli
+      when: ansible_distribution == 'Ubuntu'            
+      block:
+        - name: Get architecture
+          command: dpkg --print-architecture
+          register: deb_architecture
+        - name: Install key
+          shell:
+            cmd: curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /etc/apt/keyrings/1password.gpg
+            creates: /etc/apt/keyrings/1password.gpg
+            warn: false
+        - name: Add repository
+          ansible.builtin.apt_repository:
+            filename: 1password
+            repo: deb [arch={{ deb_architecture.stdout }} signed-by=/etc/apt/keyrings/1password.gpg] https://downloads.1password.com/linux/debian/{{ deb_architecture.stdout }} stable main
+        - name: Apt update
+          ansible.builtin.command: apt update
+          changed_when: false
+        - name: Install 1password-cli
+          package:
+            name:
+              - 1password-cli
     
     - name: Test for raspberry pi /proc/cpuinfo
       command: grep -E "Raspberry Pi|BCM2708|BCM2709|BCM2835|BCM2836" /proc/cpuinfo

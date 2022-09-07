@@ -14,6 +14,10 @@ ungrouped:
       ansible_host: lu-tze.hem.ingenstans.se
       ansible_python_interpreter: /usr/bin/python3
       proxmox_agent: true
+    carrot:
+      ansible_user: ansible
+      ansible_host: carrot.hem.ingenstans.se
+      ansible_python_interpreter: /usr/bin/python3
       
 k3s_nodes:
   hosts:
