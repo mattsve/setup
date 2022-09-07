@@ -1,7 +1,7 @@
 - name: Build a k3s cluster
   hosts: k3s_nodes
   vars:
-    k3s_become_for_all: true
+    k3s_become: true
     k3s_release_version: v1.19.16+k3s1
     k3s_server:
       cluster-cidr: 172.31.0.0/16
