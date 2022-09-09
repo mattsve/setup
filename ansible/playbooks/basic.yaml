@@ -100,6 +100,7 @@
         - name: Get architecture
           command: dpkg --print-architecture
           register: deb_architecture
+          changed_when: false
         - name: Install key
           shell:
             cmd: curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /etc/apt/keyrings/1password.gpg
