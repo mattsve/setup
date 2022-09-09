@@ -18,7 +18,28 @@ ungrouped:
       ansible_user: ansible
       ansible_host: carrot.hem.ingenstans.se
       ansible_python_interpreter: /usr/bin/python3
-      
+      zpool_storage: storage
+      netplan_enabled: true
+      netplan_config_file: /etc/netplan/00-init.yaml
+      netplan_configuration:
+        network:
+          ethernets:
+            eno1:
+              dhcp4: true
+            eno2:
+              dhcp4: true
+              optional: true
+            eno3:
+              dhcp4: true
+              optional: true
+            eno4:
+              dhcp4: true
+              optional: true
+          vlans:
+            eno1.30:
+              id: 30
+              link: eno1
+
 k3s_nodes:
   hosts:
     vimes:

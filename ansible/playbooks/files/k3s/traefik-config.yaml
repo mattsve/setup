@@ -6,5 +6,9 @@ metadata:
 spec:
   valuesContent: |-
     externalTrafficPolicy: Local
+    forwardedHeaders:
+      enabled: true
+      trustedIPs:
+        - 10.0.0.1
     ssl:
       insecureSkipVerify: true

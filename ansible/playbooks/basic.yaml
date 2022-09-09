@@ -3,7 +3,7 @@
   tasks:
     - name: proxmox agent
       when: proxmox_agent is defined and
-            proxmox_agent
+        proxmox_agent
       block:
         - name: install package
           package:
@@ -24,23 +24,26 @@
       ansible.posix.authorized_key:
         user: mattias
         state: present
-        key: '{{ item }}'
+        key: "{{ item }}"
       with_file:
         - public_keys/wopr.pub
-        - public_keys/hex.pub        
+        - public_keys/hex.pub
         - public_keys/necronomicon.pub
     - name: mattias user sudo no pwd
       ansible.builtin.lineinfile:
-          path: /etc/sudoers.d/nopassword
-          line: mattias ALL=(ALL) NOPASSWD:ALL
-          create: true
-          owner: root
-          mode: 0644
-          state: present
+        path: /etc/sudoers.d/nopassword
+        line: mattias ALL=(ALL) NOPASSWD:ALL
+        create: true
+        owner: root
+        mode: 0644
+        state: present
+    - name: install acl
+      package:
+        name: acl
     - name: Checkout dotfiles
       when: ansible_distribution == 'Ubuntu'
       ansible.builtin.git:
-        repo: 'https://github.com/mattsve/dotfiles.git'
+        repo: "https://github.com/mattsve/dotfiles.git"
         dest: "{{ mattias_user_registered.home }}/.dotfiles"
       become_user: mattias
 
@@ -51,17 +54,17 @@
           - python3-dev
 
     - name: Add powershell
-      when: ansible_distribution == 'Ubuntu' and 
-            ansible_architecture == 'x86_64'
+      when: ansible_distribution == 'Ubuntu' and
+        ansible_architecture == 'x86_64'
       block:
         - name: install packages
           package:
             name:
-              - apt-transport-https 
+              - apt-transport-https
               - software-properties-common
-        - name: Install microsoft packages          
+        - name: Install microsoft packages
           apt:
-            deb: https://packages.microsoft.com/config/ubuntu/{{ ansible_distribution_version }}/packages-microsoft-prod.deb        
+            deb: https://packages.microsoft.com/config/ubuntu/{{ ansible_distribution_version }}/packages-microsoft-prod.deb
         - name: Add repository
           ansible.builtin.command: add-apt-repository universe
           changed_when: false
@@ -73,7 +76,7 @@
             name:
               - powershell
         - name: run bootstrap.ps1
-          command: 
+          command:
             cmd: pwsh -NoProfile -NonInteractive -File "{{ mattias_user_registered.home }}/.dotfiles/bootstrap.ps1"
             chdir: "{{ mattias_user_registered.home }}/.dotfiles"
             creates: "{{ mattias_user_registered.home }}/.poshthemes"
@@ -92,7 +95,7 @@
         state: present
 
     - name: install 1password cli
-      when: ansible_distribution == 'Ubuntu'            
+      when: ansible_distribution == 'Ubuntu'
       block:
         - name: Get architecture
           command: dpkg --print-architecture
@@ -113,7 +116,7 @@
           package:
             name:
               - 1password-cli
-    
+
     - name: Test for raspberry pi /proc/cpuinfo
       command: grep -E "Raspberry Pi|BCM2708|BCM2709|BCM2835|BCM2836" /proc/cpuinfo
       register: grep_cpuinfo_raspberrypi
@@ -129,8 +132,7 @@
     - name: Set raspberry_pi fact to true
       set_fact:
         raspberry_pi: true
-      when:
-        grep_cpuinfo_raspberrypi.rc == 0 or grep_device_tree_model_raspberrypi.rc == 0
+      when: grep_cpuinfo_raspberrypi.rc == 0 or grep_device_tree_model_raspberrypi.rc == 0
 
     - name: check for poe hat
       block:
@@ -143,25 +145,25 @@
           slurp:
             src: /sys/class/thermal/cooling_device0/type
           register: cooling_device
-      ignore_errors: true    
-    
+      ignore_errors: true
+
     - name: install fan rules for poe hat
       when: cooling_device.skipped is not defined and
-            cooling_device.content | b64decode | trim == 'rpi-poe-fan'
-            and ansible_facts['distribution'] == 'Ubuntu' 
-            and ansible_facts['distribution_major_version'] == '20'
+        cooling_device.content | b64decode | trim == 'rpi-poe-fan'
+        and ansible_facts['distribution'] == 'Ubuntu'
+        and ansible_facts['distribution_major_version'] == '20'
       block:
         - name: copy udev rule file
           copy:
-            src: '50-rpi-fan.rules'
-            dest: '/etc/udev/rules.d/50-rpi-fan.rules'
-            mode: 'u=rw,go=r'
+            src: "50-rpi-fan.rules"
+            dest: "/etc/udev/rules.d/50-rpi-fan.rules"
+            mode: "u=rw,go=r"
           register: result
         - name: reload udev rules
           when: result is changed
           shell:
-            cmd: 'udevadm control --reload-rules && udevadm trigger'
-            
+            cmd: "udevadm control --reload-rules && udevadm trigger"
+
     - name: Enable cgroup via boot commandline if not already enabled for Ubuntu on a Raspberry Pi
       when: ansible_facts['distribution'] == 'Ubuntu' and raspberry_pi | default(false)
       lineinfile:
@@ -173,14 +175,14 @@
 
     - name: setup rsyslog
       copy:
-        src: '05-graylog.conf'
-        dest: '/etc/rsyslog.d/05-graylog.conf'
-        mode: 'u=rw,go=r'
+        src: "05-graylog.conf"
+        dest: "/etc/rsyslog.d/05-graylog.conf"
+        mode: "u=rw,go=r"
       notify: rsyslog
 
     - name: setup nut
       when: nut_server is defined and
-            nut_server
+        nut_server
       block:
         - name: nut package
           package:
@@ -191,7 +193,7 @@
             path: /etc/nut/nut.conf
             line: MODE=netserver
             state: present
-            regexp: '^MODE='
+            regexp: "^MODE="
         - name: setup ups
           ansible.builtin.blockinfile:
             path: /etc/nut/ups.conf
@@ -231,7 +233,7 @@
         - name: reload udev rules
           when: result is changed
           shell:
-            cmd: 'udevadm control --reload-rules && udevadm trigger'
+            cmd: "udevadm control --reload-rules && udevadm trigger"
         - name: enable nut-server
           systemd:
             name: nut-server
@@ -242,7 +244,13 @@
             name: nut-monitor
             state: started
             enabled: true
-        
+    
+    - name: Setup netplan
+      when: netplan_enabled is defined and netplan_enabled
+      become: true
+      import_role:
+        name: mrlesmithjr.netplan
+
   handlers:
     - name: reboot
       reboot:
