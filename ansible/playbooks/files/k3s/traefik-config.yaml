@@ -5,7 +5,9 @@ metadata:
   namespace: kube-system
 spec:
   valuesContent: |-
-    externalTrafficPolicy: Local
+    service:
+      spec:
+        externalTrafficPolicy: Local
     forwardedHeaders:
       enabled: true
       trustedIPs:

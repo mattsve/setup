@@ -2,7 +2,7 @@
   hosts: k3s_nodes
   vars:
     k3s_become: true
-    k3s_release_version: v1.19.16+k3s1
+    k3s_release_version: v1.24.4+k3s1
     k3s_server:
       cluster-cidr: 172.31.0.0/16
       service-cidr: 172.30.0.0/16
@@ -36,19 +36,60 @@
             src: k3s/traefik-config.yaml
             dest: /var/lib/rancher/k3s/server/manifests/traefik-config.yaml
             mode: '0644'
-      
+
+    - name: Create zfs root
+      when: k3s_zfs is defined
+      become: true
+      community.general.zfs:
+        name: '{{ k3s_zfs.pool }}/k3s'
+        state: present
+
+    - name: zfs agent volume
+      when: k3s_zfs is defined and
+            k3s_zfs.agent_volume
+      become: true
+      block:
+        - name: Check zfs volumes
+          command: zfs list -Ho name {{ k3s_zfs.pool }}/k3s/agent
+          register: result_zfs_list
+          changed_when: false
+          failed_when: false
+        - name: create agent volume
+          command: zfs create -s -V 50GB {{ k3s_zfs.pool }}/k3s/agent
+          when: result_zfs_list.rc == 1
+        - name: format with ext4
+          community.general.filesystem:
+            dev: "/dev/zvol/{{ k3s_zfs.pool }}/k3s/agent"
+            fstype: ext4
+        - name: create mount directory
+          ansible.builtin.file:
+            path: /var/lib/rancher/k3s/agent
+            state: directory
+            mode: '0755'
+        - name: mount disk
+          ansible.posix.mount:
+            boot: true
+            dump: '0'
+            fstype: ext4
+            passno: '2'
+            path: /var/lib/rancher/k3s/agent
+            src: "/dev/zvol/{{ k3s_zfs.pool }}/k3s/agent"
+            state: mounted
+
     - name: create /k3s-storage
-      become: yes
+      become: true
       block:
         - name: crete with zfs
-          when: zpool_storage is defined
+          when: k3s_zfs is defined and 
+                k3s_zfs.storage
           community.general.zfs:
-            name: '{{ zpool_storage }}/k3s-storage'
+            name: '{{ k3s_zfs.pool }}/k3s/storage'
             state: present
             extra_zfs_properties:
                 mountpoint: /k3s-storage
         - name: create ordinary folder
-          when: zpool_storage is not defined
+          when: k3s_zfs is not defined or
+                not k3s_zfs.storage
           ansible.builtin.file:
             path: /k3s-storage
             state: directory
