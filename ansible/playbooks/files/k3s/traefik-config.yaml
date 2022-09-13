@@ -14,3 +14,6 @@ spec:
         - 10.0.0.1
     ssl:
       insecureSkipVerify: true
+    ports:
+      web:
+        redirectTo: websecure
