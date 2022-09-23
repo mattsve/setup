@@ -34,8 +34,8 @@ k3s_nodes:
               dhcp4: true
               optional: true
           vlans:
-            eno1.30:
-              id: 30
+            eno1.124:
+              id: 124
               link: eno1
     dibbler:
       ansible_user: ansible
