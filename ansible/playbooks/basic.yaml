@@ -246,6 +246,10 @@
             state: started
             enabled: true
     
+    - name: install packages
+      when: packages is defined
+      package:
+        name: "{{ packages }}"
     - name: Setup netplan
       when: netplan_enabled is defined and netplan_enabled
       become: true

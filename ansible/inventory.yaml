@@ -17,13 +17,17 @@ k3s_nodes:
         pool: storage
         agent_volume: true
         storage: true
+      packages:
+        - bridge-utils
+        - qemu-kvm
+        - libvirt-daemon-system
       netplan_enabled: true
       netplan_config_file: /etc/netplan/00-init.yaml
       netplan_configuration:
         network:
           ethernets:
             eno1:
-              dhcp4: true
+              dhcp4: false
             eno2:
               dhcp4: true
               optional: true
@@ -33,6 +37,11 @@ k3s_nodes:
             eno4:
               dhcp4: true
               optional: true
+          bridges:
+            br0:
+              dhcp4: true
+              interfaces:
+                - eno1
           vlans:
             eno1.124:
               id: 124
