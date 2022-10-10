@@ -5,6 +5,10 @@ ungrouped:
       ansible_host: octoprint.hem.ingenstans.se
       ansible_python_interpreter: /usr/bin/python3
 
+lxd:
+  hosts:
+    carrot:
+
 k3s_nodes:
   hosts:
     carrot:
@@ -19,8 +23,6 @@ k3s_nodes:
         storage: true
       packages:
         - bridge-utils
-        - qemu-kvm
-        - libvirt-daemon-system
       netplan_enabled: true
       netplan_config_file: /etc/netplan/00-init.yaml
       netplan_configuration:

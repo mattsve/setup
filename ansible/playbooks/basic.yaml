@@ -26,7 +26,6 @@
         state: present
         key: "{{ item }}"
       with_file:
-        - public_keys/wopr.pub
         - public_keys/hex.pub
         - public_keys/necronomicon.pub
     - name: mattias user sudo no pwd
@@ -250,6 +249,16 @@
       when: packages is defined
       package:
         name: "{{ packages }}"
+    - name: install snaps
+      when: snaps is defined
+      community.general.snap:
+        name: "{{ snaps }}"
+    - name: install classic snaps
+      when: classic_snaps is defined
+      community.general.snap:
+        name: "{{ item }}"
+        classic: true
+      loop: "{{ classic_snaps }}"
     - name: Setup netplan
       when: netplan_enabled is defined and netplan_enabled
       become: true

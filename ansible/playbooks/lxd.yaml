@@ -1,0 +1,17 @@
+- name: Setup lxd
+  hosts: lxd
+  become: true
+  tasks:
+    - name: Install lxd
+      community.general.snap:
+        name: lxd
+    - name: Configure lxd
+      ansible.builtin.command: lxd init --preseed
+      args:
+        stdin: "{{ lookup('file', 'lxd/lxd-config.yaml') }}"
+    - name: Add client certificate
+      ansible.builtin.command: lxc config trust add - --name client
+      args:
+        stdin: "{{ lookup('file', 'lxd/public.crt') }}"
+
+    
