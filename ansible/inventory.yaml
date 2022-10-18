@@ -3,11 +3,51 @@ ungrouped:
     octoprint:
       ansible_user: ansible
       ansible_host: octoprint.hem.ingenstans.se
-      ansible_python_interpreter: /usr/bin/python3
-
+      §ansible_python_interpreter: /usr/bin/python3
+      netplan_enabled: false
+    thermiq:
+      ansible_user: ansible
+      ansible_host: thermiq.hem.ingenstans.se
+      netplan_enabled: false
+      packages:
+        - wget
+        - cron
+  
 lxd:
   hosts:
     carrot:
+      containers:
+        - name: thermiq
+          config:
+            cloud-init.user-data: |
+              #cloud-config
+              hostname: thermiq
+              timezone: Europe/Stockholm
+              users:
+                - name: ansible
+                  ssh_authorized_keys:
+                    - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP2VTjfkTbp9b+Ds0zlCS4tf1bA46bWfKj5mayzELig4 mattias@HEX
+                    - ecdsa-sha2-nistp521 AAAAE2VjZHNhLXNoYTItbmlzdHA1MjEAAAAIbmlzdHA1MjEAAACFBABnbSzylm/Qrf/dKNsJYHDzWd5u7oDTznMlh2hVm5MNDFSPK8q5bT/x3zAkstQl9KZFuBHDphR9T8BAMBEkhyPELQFB6IHtQUmSHg1ON1TGUVX69x8CsWYN1iZk0LYdxmOwab35GRtMx9iLhhKejyRUKxnXUmSWUUNYt+pUH4uE0a5pLQ== mattias@NECRONOMICON
+                  sudo: ALL=(ALL) NOPASSWD:ALL
+              packages:
+                - openssh-server
+                - rsyslog
+                - git
+            limits.cpu: "1"
+            limits.memory: 1GiB
+          devices:
+          ephemeral: false
+          ignore_volatile_options: false
+          profiles:
+            - default
+            - bridged_network
+          type: virtual-machine
+          source:
+            type: image
+            server: https://images.linuxcontainers.org
+            mode: pull
+            protocol: simplestreams
+            alias: debian/11/cloud
 
 k3s_nodes:
   hosts:
@@ -52,6 +92,7 @@ k3s_nodes:
       ansible_user: ansible
       ansible_host: dibbler.hem.ingenstans.se
       ansible_python_interpreter: /usr/bin/python3
+      netplan_enabled: false
       k3s_agent:
         node-label:
           - "rfxtrx=true"

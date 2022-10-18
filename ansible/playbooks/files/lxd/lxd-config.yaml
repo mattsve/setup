@@ -31,6 +31,24 @@ profiles:
       pool: default
       type: disk
   name: default
+- config: {}
+  description: Bridged network LXD profile
+  devices:
+    eth0:
+      name: eth0
+      nictype: bridged
+      parent: br0
+      type: nic
+  name: bridged_network
+- config: {}
+  description: Additional bridged network LXD profile
+  devices:
+    eth0:
+      name: eth1
+      nictype: bridged
+      parent: br0
+      type: nic
+  name: additional_bridged_network
 projects:
 - config:
     features.images: "true"

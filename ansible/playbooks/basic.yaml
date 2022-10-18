@@ -40,7 +40,7 @@
       package:
         name: acl
     - name: Checkout dotfiles
-      when: ansible_distribution == 'Ubuntu'
+      when: ansible_distribution == 'Ubuntu' or ansible_distribution == 'Debian'
       ansible.builtin.git:
         repo: "https://github.com/mattsve/dotfiles.git"
         dest: "{{ mattias_user_registered.home }}/.dotfiles"
@@ -94,7 +94,8 @@
         state: present
 
     - name: install 1password cli
-      when: ansible_distribution == 'Ubuntu'
+      when: ansible_distribution == 'Ubuntu' and
+        ansible_architecture == 'x86_64'
       block:
         - name: Get architecture
           command: dpkg --print-architecture
@@ -172,6 +173,30 @@
         regexp: '^((?!.*\bcgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory\b).*)$'
         line: '\1 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory'
       notify: reboot
+
+    - name: Watchdog
+      when: raspberry_pi is defined and raspberry_pi
+      block:
+        - name: Enable watchdog
+          lineinfile:
+            path: /etc/systemd/system.conf
+            line: "{{ item }}"
+          loop:
+            - RuntimeWatchdogSec=10
+            - ShutdownWatchdogSec=2min
+          notify: reboot
+        - name: install watchdog package
+          package:
+            name: watchdog
+            state: present
+        - name: Watch eth0
+          lineinfile:
+            path: /etc/watchdog.conf
+            line: "{{ item }}"
+          loop:
+            - interface = eth0
+            - retry-timeout = 0
+          notify: watchdog  
 
     - name: setup rsyslog
       copy:
@@ -271,4 +296,8 @@
     - name: rsyslog
       service:
         name: rsyslog
+        state: restarted
+    - name: watchdog
+      service:
+        name: watchdog
         state: restarted

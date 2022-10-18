@@ -9,9 +9,16 @@
       ansible.builtin.command: lxd init --preseed
       args:
         stdin: "{{ lookup('file', 'lxd/lxd-config.yaml') }}"
+    - name: Check client certificates
+      shell: lxc config trust list | grep 45a67e2a065f
+      register: certificate_check
+      ignore_errors: true
     - name: Add client certificate
+      when: certificate_check.rc != 0
       ansible.builtin.command: lxc config trust add - --name client
       args:
         stdin: "{{ lookup('file', 'lxd/public.crt') }}"
-
-    
+    - name: containers
+      community.general.lxd_container: "{{ item }}"
+      loop: "{{ containers  }}"
+  

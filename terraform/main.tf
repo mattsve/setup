@@ -1,8 +1,7 @@
 terraform {
   required_providers {
-    proxmox = {
-      source = "Telmate/proxmox"
-      version = "2.6.7"
+    libvirt = {
+      source = "dmacvicar/libvirt"
     }
   }
   backend "http" {
@@ -11,8 +10,6 @@ terraform {
   }
 }
 
-provider "proxmox" {
-  pm_api_url = "https://atuin.hem.ingenstans.se:8006/api2/json"
-  pm_user = "terraform@pve"
-  pm_tls_insecure = true
+provider "libvirt" {
+  uri = "qemu+ssh://mattias@carrot.hem.ingenstans.se/system?sshauth=privkey&keyfile=/home/mattias/.ssh/id_ecdsa"
 }

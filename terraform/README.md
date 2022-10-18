@@ -1,7 +1,6 @@
 # Usage
 
 ## Environment variables
-* PM_PASS='Password for Proxmox'
 * TF_HTTP_USERNAME='webdav user'
 * TF_HTTP_PASSWORD='webdav password'
 
@@ -12,3 +11,5 @@
 
 ## Teardown
     terraform destroy
+
+# Hints and tips
