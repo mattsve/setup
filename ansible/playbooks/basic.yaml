@@ -194,8 +194,8 @@
             path: /etc/watchdog.conf
             line: "{{ item }}"
           loop:
-            - interface = eth0
-            - retry-timeout = 0
+            - ping = 10.0.0.1
+            - retry-timeout = 60
           notify: watchdog  
 
     - name: setup rsyslog
