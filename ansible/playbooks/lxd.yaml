@@ -21,4 +21,17 @@
     - name: containers
       community.general.lxd_container: "{{ item }}"
       loop: "{{ containers  }}"
-  
+    - name: backup dir
+      ansible.builtin.file:
+        path: /backup/lxd
+        state: directory
+        owner: root
+        group: root
+        mode: '0600'
+    - name: backup script
+      copy:
+        src: lxd/lxd-export.sh
+        dest: /etc/cron.daily/lxd-export
+        mode: u=rwx,go=rx
+        owner: root
+        group: root
