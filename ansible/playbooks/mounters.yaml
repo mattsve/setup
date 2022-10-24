@@ -1,0 +1,15 @@
+- name: Setup mounts
+  hosts: mounters
+  become: true
+  tasks:
+  - name: create mountpoints
+    ansible.builtin.file:
+      path: "{{ item.path }}"
+      state: directory
+      owner: root
+      group: root
+      mode: '0644'
+    loop: "{{ mounts }}"
+  - name: mounts
+    ansible.posix.mount: "{{ item }}"
+    loop: "{{ mounts }}"

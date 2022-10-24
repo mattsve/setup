@@ -12,7 +12,17 @@ ungrouped:
       packages:
         - wget
         - cron
-  
+
+mounters:
+  hosts:
+    carrot:
+      mounts:
+        - path: /backup
+          src: //l-space.hem.ingenstans.se/data/backup/carrot
+          opts: rw,vers=3.0,credentials=/root/.smb-credentials
+          state: mounted
+          fstype: cifs
+    
 lxd:
   hosts:
     carrot:
@@ -63,6 +73,7 @@ k3s_nodes:
         storage: true
       packages:
         - bridge-utils
+        - cifs-utils
       netplan_enabled: true
       netplan_config_file: /etc/netplan/00-init.yaml
       netplan_configuration:
