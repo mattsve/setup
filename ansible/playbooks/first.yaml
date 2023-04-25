@@ -16,7 +16,7 @@
         state: present
         key: '{{ item }}'
       with_file:
-        - public_keys/necronomicon.pub
+        - public_keys/luggage.pub
         - public_keys/hex.pub        
     - name: Ansible user sudo no pwd
       ansible.builtin.lineinfile:

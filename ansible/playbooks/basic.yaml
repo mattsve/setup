@@ -27,7 +27,7 @@
         key: "{{ item }}"
       with_file:
         - public_keys/hex.pub
-        - public_keys/necronomicon.pub
+        - public_keys/luggage.pub
     - name: mattias user sudo no pwd
       ansible.builtin.lineinfile:
         path: /etc/sudoers.d/nopassword

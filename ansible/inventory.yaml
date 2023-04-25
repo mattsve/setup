@@ -111,3 +111,12 @@ k3s_nodes:
           - "zwavejs=true"
         node-taint:
           - "node=small:NoSchedule"
+    nobby:
+      ansible_user: ansible
+      ansible_host: nobby.hem.ingenstans.se
+      ansible_python_interpreter: /usr/bin/python3
+      netplan_enabled: false
+      k3s_agent:
+        node-taint:
+          - "node=small:NoSchedule"
+
