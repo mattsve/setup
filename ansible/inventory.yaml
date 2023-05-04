@@ -108,7 +108,6 @@ k3s_nodes:
         node-label:
           - "rfxtrx=true"
           - "conbee=true"
-          - "zwavejs=true"
         node-taint:
           - "node=small:NoSchedule"
     nobby:
@@ -117,6 +116,8 @@ k3s_nodes:
       ansible_python_interpreter: /usr/bin/python3
       netplan_enabled: false
       k3s_agent:
+        node-label:
+          - "zwavejs=true"
         node-taint:
           - "node=small:NoSchedule"
 
