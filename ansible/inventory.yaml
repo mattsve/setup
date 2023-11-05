@@ -99,17 +99,6 @@ k3s_nodes:
             eno1.124:
               id: 124
               link: eno1
-    dibbler:
-      ansible_user: ansible
-      ansible_host: dibbler.hem.ingenstans.se
-      ansible_python_interpreter: /usr/bin/python3
-      netplan_enabled: false
-      k3s_agent:
-        node-label:
-          - "rfxtrx=true"
-          - "conbee=true"
-        node-taint:
-          - "node=small:NoSchedule"
     nobby:
       ansible_user: ansible
       ansible_host: nobby.hem.ingenstans.se
@@ -118,6 +107,8 @@ k3s_nodes:
       k3s_agent:
         node-label:
           - "zwavejs=true"
+          - "rfxtrx=true"
+          - "conbee=true"
         node-taint:
           - "node=small:NoSchedule"
 
