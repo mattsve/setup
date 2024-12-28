@@ -247,7 +247,6 @@
           ansible.builtin.blockinfile:
             path: /etc/nut/upsd.conf
             block: |
-              LISTEN 127.0.0.1
               LISTEN 0.0.0.0
         - name: copy udev rule
           ansible.builtin.copy:
