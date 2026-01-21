@@ -14,4 +14,4 @@ do
     lxc image delete ${BACKUP_NAME}
     lxc delete ${HOST}/auto-backup
 done
-find ${BACKUP_DIR}/ -maxdepth 1 -mtime +14 -type d -exec rm -rv {} ;
+find ${BACKUP_DIR}/ -maxdepth 1 -mtime +14 -type d -exec rm -rv {} \;
