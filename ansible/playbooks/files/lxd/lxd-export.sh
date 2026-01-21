@@ -1,6 +1,17 @@
-#!/bin/bash
-for i in $(lxc list -c n --format csv)
+#!/usr/bin/env bash
+set -ex
+
+BACKUP_DIR=/backup/lxd
+HOSTS=($(lxc list -c n --format csv))
+
+for HOST in "${HOSTS[@]}"
 do
-     echo "Making backup of ${i} ..."
-     lxc export "${i}" "/backup/lxd/${i}-backup.tar.xz" --optimized-storage
+    BACKUP_NAME=${HOST}-$(date +"%Y-%m-%d")
+
+    lxc snapshot ${HOST} auto-backup
+    lxc publish ${HOST}/auto-backup --alias ${BACKUP_NAME}
+    lxc image export ${BACKUP_NAME} ${BACKUP_DIR}/${BACKUP_NAME}
+    lxc image delete ${BACKUP_NAME}
+    lxc delete ${HOST}/auto-backup
 done
+find ${BACKUP_DIR}/ -maxdepth 1 -mtime +14 -type d -exec rm -rv {} ;
