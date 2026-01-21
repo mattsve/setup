@@ -43,7 +43,6 @@
           shell:
             cmd: curl -sS https://downloads.1password.com/linux/keys/1password.asc | sudo gpg --dearmor --output /etc/apt/keyrings/1password.gpg
             creates: /etc/apt/keyrings/1password.gpg
-            warn: false
         - name: Add repository
           ansible.builtin.apt_repository:
             filename: 1password
