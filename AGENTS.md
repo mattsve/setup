@@ -52,8 +52,8 @@ ansible-playbook -i inventory.yaml --limit pve1 playbooks/nut.yaml
 Configuration is defined in `host_vars/<hostname>.yaml` using:
 
 - `nut_server` - Enable NUT (Network UPS Tools) server (boolean)
-- `nut_monuser_password` - Monitor user password (from vault)
-- `nut_mainuser_password` - Main user password (from vault)
+- `nut_monuser_password` - Monitor user password (set to `secret` for Synology compatibility)
+- `nut_mainuser_password` - Main user password (fetched from 1Password CLI)
 
 ## Constraints
 
@@ -63,11 +63,12 @@ Configuration is defined in `host_vars/<hostname>.yaml` using:
 - Python 3 must be available (`/usr/bin/python3`)
 - Playbooks require `become: true` (root privileges)
 
-## Vault Integration
+## Secrets Management
 
-Sensitive values use Ansible Vault variables:
-- `vault_nut_monuser_password`
-- `vault_nut_mainuser_password`
+- **monuser** password: Plaintext value `secret` (required for Synology compatibility)
+- **mainuser** password: Fetched via 1Password CLI using the `community.general.onepassword` lookup plugin
+
+Required Ansible collection: `community.general` (defined in `ansible/requirements.yml`)
 
 ## Agent Guidelines
 
