@@ -3,7 +3,7 @@ ungrouped:
     octoprint:
       ansible_user: ansible
       ansible_host: octoprint.hem.ingenstans.se
-      §ansible_python_interpreter: /usr/bin/python3
+      ansible_python_interpreter: /usr/bin/python3
       netplan_enabled: false
     thermiq:
       ansible_user: ansible
@@ -66,6 +66,8 @@ k3s_nodes:
       ansible_host: carrot.hem.ingenstans.se
       ansible_python_interpreter: /usr/bin/python3
       nut_server: true
+      nut_monuser_password: "{{ vault_nut_monuser_password | default('secret') }}"
+      nut_mainuser_password: "{{ vault_nut_mainuser_password | default('secret2') }}"
       k3s_control_node: true
       k3s_zfs:
         pool: storage

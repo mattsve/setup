@@ -1,0 +1,72 @@
+---
+- name: Install nut package
+  package:
+    name: nut
+    state: present
+
+- name: Configure nut.conf
+  template:
+    src: nut.conf.j2
+    dest: /etc/nut/nut.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Configure ups.conf
+  template:
+    src: ups.conf.j2
+    dest: /etc/nut/ups.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Configure upsd.users
+  template:
+    src: upsd.users.j2
+    dest: /etc/nut/upsd.users
+    owner: root
+    group: root
+    mode: 0640
+
+- name: Configure upsmon.conf
+  template:
+    src: upsmon.conf.j2
+    dest: /etc/nut/upsmon.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Configure upsd.conf
+  template:
+    src: upsd.conf.j2
+    dest: /etc/nut/upsd.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Copy udev rule for NUT USB UPS
+  copy:
+    src: "{{ nut_udev_rule_source }}"
+    dest: /etc/udev/rules.d/62-nut-usbups.rules
+    remote_src: true
+    owner: root
+    group: root
+    mode: 0644
+  register: udev_rule_result
+
+- name: Reload udev rules
+  shell: |
+    udevadm control --reload-rules && udevadm trigger
+  when: udev_rule_result is changed
+
+- name: Enable and start nut-server
+  systemd:
+    name: "{{ nut_server_service }}"
+    state: started
+    enabled: true
+
+- name: Enable and start nut-monitor
+  systemd:
+    name: "{{ nut_monitor_service }}"
+    state: started
+    enabled: true
