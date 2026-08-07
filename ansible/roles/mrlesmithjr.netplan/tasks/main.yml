@@ -1,3 +1,0 @@
----
-- import_tasks: netplan.yml
-  when: netplan_enabled

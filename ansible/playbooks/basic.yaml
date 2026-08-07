@@ -55,13 +55,6 @@
             name:
               - 1password-cli
 
-    - name: setup rsyslog
-      copy:
-        src: "05-graylog.conf"
-        dest: "/etc/rsyslog.d/05-graylog.conf"
-        mode: "u=rw,go=r"
-      notify: rsyslog
-
     - name: setup nut server
       when: nut_server is defined and nut_server
       import_role:
@@ -81,11 +74,6 @@
         name: "{{ item }}"
         classic: true
       loop: "{{ classic_snaps }}"
-    - name: Setup netplan
-      when: netplan_enabled is defined and netplan_enabled
-      become: true
-      import_role:
-        name: mrlesmithjr.netplan
 
   handlers:
     - name: reboot
