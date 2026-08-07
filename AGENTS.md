@@ -2,78 +2,70 @@
 
 ## Repository Overview
 
-This is a personal Ansible-based infrastructure-as-code repository for managing home servers at `hem.ingenstans.se`. It provides automated provisioning, configuration, and management of:
+This is a personal Ansible-based infrastructure-as-code repository for managing home servers at `hem.ingenstans.se`. It provides automated provisioning and configuration for:
 
-- **Bare metal servers** (carrot, octoprint, thermiq)
-- **Network mounts** (NFS, CIFS)
+- **Proxmox VE server** (pve1) - Primary virtualization host
+- **NUT (Network UPS Tools)** - UPS monitoring and management
 
 ## Structure
 
 ```
 ansible/
 ├── ansible.cfg           # Ansible configuration
-├── inventory.yaml        # Host inventory with group vars
-├── requirements.yaml     # Galaxy roles and collections
+├── inventory.yaml        # Host inventory
+├── host_vars/            # Host-specific variables
+│   └── pve1.yaml         # pve1 host configuration
 ├── playbooks/
-│   ├── first.yaml        # Initial server bootstrap (sudo, ansible user)
-│   ├── basic.yaml        # Base configuration (users, packages)
-│   ├── mounters.yaml     # Filesystem mount configuration
-│   └── files/
+│   └── nut.yaml          # NUT server configuration
 └── roles/
+    └── nut/              # NUT role for UPS management
+        ├── tasks/
+        │   └── main.yaml
+        └── templates/     # NUT configuration templates
 ```
 
-## Inventory Groups
+## Current Hosts
 
-| Group | Purpose | Hosts |
-|-------|---------|-------|
-| `ungrouped` | General servers without specific roles | octoprint, thermiq |
-| `mounters` | Servers requiring mount configurations | carrot |
+| Host | Purpose | Configuration |
+|------|---------|---------------|
+| `pve1` | Proxmox VE server | NUT server enabled |
 
 ## Key Components
 
-### Collections
-
-- **community.general** (5.6.0)
-- **ansible.posix** (1.1.1)
+### Roles
+- **nut** - Custom role for Network UPS Tools server configuration
 
 ## Usage Patterns
 
-### First-time server setup
+### Apply NUT configuration
 ```bash
-ansible-galaxy install -r requirements.yaml
-ansible-playbook -i <host>, -u root --ask-pass playbooks/first.yaml
-```
-
-### Apply configuration
-```bash
-ansible-playbook -i inventory.yaml playbooks/basic.yaml
-ansible-playbook -i inventory.yaml playbooks/mounters.yaml
+ansible-playbook -i inventory.yaml playbooks/nut.yaml
 ```
 
 ### Target specific hosts
 ```bash
-ansible-playbook -i ./inventory.yaml --limit carrot ./playbooks/basic.yaml
+ansible-playbook -i inventory.yaml --limit pve1 playbooks/nut.yaml
 ```
 
 ## Host-Specific Configuration
 
-Configuration is defined in `inventory.yaml` using host variables:
+Configuration is defined in `host_vars/<hostname>.yaml` using:
 
-- `mounts` - Filesystem mount points
-- `packages` - Additional packages to install
-- `nut_server` - Enable NUT (Network UPS Tools) server
+- `nut_server` - Enable NUT (Network UPS Tools) server (boolean)
+- `nut_monuser_password` - Monitor user password (from vault)
+- `nut_mainuser_password` - Main user password (from vault)
 
 ## Constraints
 
-- Targets Debian/Ubuntu servers
-- Assumes SSH access with sudo privileges
-- Uses `ansible` user for management (created by first.yaml)
+- Targets Proxmox VE (Debian-based) servers
+- Assumes SSH access with root privileges
+- Uses root user for management
 - Python 3 must be available (`/usr/bin/python3`)
-- Some playbooks require `become: true` (root privileges)
+- Playbooks require `become: true` (root privileges)
 
 ## Vault Integration
 
-Sensitive values use Ansible Vault variables with fallback defaults:
+Sensitive values use Ansible Vault variables:
 - `vault_nut_monuser_password`
 - `vault_nut_mainuser_password`
 
@@ -81,9 +73,9 @@ Sensitive values use Ansible Vault variables with fallback defaults:
 
 When working with this repository:
 
-1. **Read inventory.yaml first** - Host-specific configuration lives here
-2. **Respect the playbook order** - first.yaml → basic.yaml → role-specific playbooks
-3. **Preserve existing structure** - Add new hosts to inventory, not new playbooks
-4. **Use existing roles** - Prefer galaxy roles over custom tasks
-5. **Backup before destructive changes**
-6. **Test on one host first** - Use `--limit <hostname>` for changes affecting multiple hosts
+1. **Read inventory.yaml and host_vars first** - Host-specific configuration lives here
+2. **Add new hosts to inventory** - Update inventory.yaml and create corresponding host_vars files
+3. **Use roles for reusable configurations** - Prefer custom roles over ad-hoc tasks
+4. **Backup before destructive changes**
+5. **Test on one host first** - Use `--limit <hostname>` for changes affecting multiple hosts
+6. **Keep playbooks focused** - Each playbook should have a single, clear purpose

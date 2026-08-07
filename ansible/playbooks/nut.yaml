@@ -1,0 +1,9 @@
+---
+- hosts: all
+  become: true
+  tasks:
+    - name: Setup NUT server
+      when: nut_server | default(false)
+      import_role:
+        name: nut
+      tags: nut

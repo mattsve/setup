@@ -1,0 +1,4 @@
+---
+nut_server: true
+nut_monuser_password: "{{ vault_nut_monuser_password }}"
+nut_mainuser_password: "{{ vault_nut_mainuser_password }}"

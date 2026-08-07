@@ -1,32 +1,6 @@
-ungrouped:
+all:
   hosts:
-    octoprint:
-      ansible_user: ansible
-      ansible_host: octoprint.hem.ingenstans.se
-      ansible_python_interpreter: /usr/bin/python3
-    thermiq:
-      ansible_user: ansible
-      ansible_host: thermiq.hem.ingenstans.se
-      packages:
-        - wget
-        - cron
-
-mounters:
-  hosts:
-    carrot:
-      ansible_user: ansible
-      ansible_host: carrot.hem.ingenstans.se
-      ansible_python_interpreter: /usr/bin/python3
-      nut_server: true
-      nut_monuser_password: "{{ vault_nut_monuser_password | default('secret') }}"
-      nut_mainuser_password: "{{ vault_nut_mainuser_password | default('secret2') }}"
-      packages:
-        - bridge-utils
-        - cifs-utils
-      mounts:
-        - path: /backup
-          src: //l-space.hem.ingenstans.se/data/backup/carrot
-          opts: rw,vers=3.0,credentials=/root/.smb-credentials
-          state: mounted
-          fstype: cifs
+    pve1:
+      ansible_host: pve1.hem.ingenstans.se
+      ansible_user: root
 
