@@ -11,7 +11,9 @@ ansible-galaxy collection install -r ansible/requirements.yml
 # Usage
 
 ## NUT setup
-    ansible-playbook -i inventory.yaml playbooks/nut.yaml
+```bash
+ansible-playbook -i ansible/inventory.yaml ansible/playbooks/nut.yaml
+```
 
 ## Secrets
 - **monuser** password is set to `secret` for Synology compatibility
