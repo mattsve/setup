@@ -1,0 +1,74 @@
+---
+- name: Install required packages
+  package:
+    name:
+      - postfix
+      - sasl2-bin
+      - libsasl2-modules
+    state: present
+
+- name: Create sasl_passwd directory
+  file:
+    path: /etc/postfix
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Create SASL password file
+  template:
+    src: sasl_passwd.j2
+    dest: /etc/postfix/sasl_passwd
+    owner: root
+    group: root
+    mode: 0600
+  when:
+    - postfix_relay_username != ""
+    - postfix_relay_password != ""
+  notify: rebuild sasl passwd db
+
+- name: Create SASL password database
+  command: postmap /etc/postfix/sasl_passwd
+  args:
+    creates: /etc/postfix/sasl_passwd.db
+  when:
+    - postfix_relay_username != ""
+    - postfix_relay_password != ""
+
+- name: Configure main.cf
+  template:
+    src: main.cf.j2
+    dest: /etc/postfix/main.cf
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart postfix
+
+- name: Configure SASL for Postfix
+  template:
+    src: sasl_smtpd.conf.j2
+    dest: /etc/postfix/sasl_smtpd.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart postfix
+
+- name: Configure canonical mappings
+  template:
+    src: canonical.j2
+    dest: /etc/postfix/canonical
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart postfix
+
+- name: Build canonical maps database
+  command: postmap /etc/postfix/canonical
+  args:
+    creates: /etc/postfix/canonical.db
+
+- name: Enable and start postfix
+  systemd:
+    name: "{{ postfix_service }}"
+    state: started
+    enabled: true

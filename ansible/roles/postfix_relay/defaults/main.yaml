@@ -1,0 +1,42 @@
+---
+# Postfix relay configuration defaults
+
+# Relay host configuration
+postfix_relay_host: "smtp.mailbox.org"
+postfix_relay_port: 587
+
+# SMTP authentication credentials
+# These should be overridden in host_vars or group_vars
+postfix_relay_username: ""
+postfix_relay_password: ""
+
+# Use TLS for relay connection
+postfix_relay_use_tls: true
+
+# My hostname (used in HELO/EHLO)
+postfix_myhostname: "{{ ansible_hostname }}"
+
+# My domain
+postfix_mydomain: "{{ ansible_domain | default(ansible_hostname) }}"
+
+# Originating mail domain
+postfix_originating_domain: "{{ postfix_mydomain }}"
+
+# Networks that can send mail through this server
+postfix_mynetworks: "127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128"
+
+# Destination types
+postfix_destination: ""
+
+# Service name
+postfix_service: postfix
+
+# SASL configuration
+postfix_sasl_auth_enable: "yes"
+postfix_sasl_security_options: "noanonymous"
+postfix_sasl_password_maps: "hash:/etc/postfix/sasl_passwd"
+
+# TLS configuration
+postfix_smtpd_use_tls: "yes"
+postfix_smtp_use_tls: "yes"
+postfix_smtp_tls_security_level: "encrypt"

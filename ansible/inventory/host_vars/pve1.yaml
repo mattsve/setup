@@ -1,0 +1,9 @@
+---
+nut_server: true
+nut_monuser_password: "secret"
+nut_mainuser_password: "{{ lookup('community.general.onepassword', 'op://private/Proxmox/nut') }}"
+
+postfix_relay_enabled: true
+postfix_relay_username: "{{ lookup('community.general.onepassword', 'op://private/Proxmox/mailbox-username') }}"
+postfix_relay_password: "{{ lookup('community.general.onepassword', 'op://private/Proxmox/mailbox-password') }}"
+postfix_mydomain: "{{ lookup('community.general.onepassword', 'op://private/Proxmox/mailbox-domain') }}"

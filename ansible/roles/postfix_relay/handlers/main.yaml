@@ -1,0 +1,10 @@
+---
+- name: rebuild sasl passwd db
+  command: postmap /etc/postfix/sasl_passwd
+  args:
+    creates: /etc/postfix/sasl_passwd.db
+
+- name: restart postfix
+  systemd:
+    name: "{{ postfix_service }}"
+    state: restarted

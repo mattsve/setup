@@ -1,0 +1,12 @@
+---
+- name: Configure Postfix relay
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Import postfix_relay role
+      import_role:
+        name: postfix_relay
+      when: postfix_relay_enabled | default(false)
+      tags: postfix

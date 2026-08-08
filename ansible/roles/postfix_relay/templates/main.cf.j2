@@ -1,0 +1,33 @@
+# See /usr/share/postfix/main.cf.dist for a commented, more complete version
+
+# Debian specific:  Specify a default configuration for the package
+smtpd_banner = $myhostname ESMTP $mail_name (Debian/GNU)
+setgid_group = postdrop
+
+# Basic configuration
+myhostname = {{ postfix_myhostname }}
+mydomain = {{ postfix_mydomain }}
+myorigin = $mydomain
+inet_interfaces = loopback-only
+mynetworks = {{ postfix_mynetworks }}
+
+# Destination configuration
+mydestination = $myhostname, localhost.$mydomain, localhost
+
+# Relay configuration - use mailbox.org as smarthost
+relayhost = [{{ postfix_relay_host }}]:{{ postfix_relay_port }}
+
+# SASL authentication for relay
+smtp_sasl_auth_enable = {{ postfix_sasl_auth_enable }}
+smtp_sasl_security_options = {{ postfix_sasl_security_options }}
+smtp_sasl_password_maps = {{ postfix_sasl_password_maps }}
+smtp_sasl_mechanism_filter = plain, login
+
+# TLS configuration
+smtpd_use_tls = {{ postfix_smtpd_use_tls }}
+smtp_use_tls = {{ postfix_smtp_use_tls }}
+smtp_tls_security_level = {{ postfix_smtp_tls_security_level }}
+smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+
+# Avoid sending mail from root@hostname which is often rejected
+canonical_maps = regexp:/etc/postfix/canonical

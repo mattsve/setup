@@ -1,9 +1,6 @@
 ---
 # Nut UPS monitoring defaults
 
-# Enable nut server setup
-nut_enabled: true
-
 # Nut mode: netserver, standalone, or netclient
 nut_mode: netserver
 
