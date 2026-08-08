@@ -1,0 +1,12 @@
+---
+plugin: community.proxmox.proxmox
+url: https://pve1.hem.ingenstans.se:8006
+user: root@pam
+token_id: ansible
+validate_certs: true
+want_facts: true
+exclude_nodes: true
+keyed_groups:
+  - key: proxmox_tags_parsed
+    separator: ""
+    prefix: proxmox_tags_
