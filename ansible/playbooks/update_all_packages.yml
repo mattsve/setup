@@ -1,0 +1,35 @@
+---
+- name: Update all packages on Linux hosts
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Update all packages
+      ansible.builtin.package:
+        name: "*"
+        state: latest
+        update_cache: true
+
+    - name: Check if reboot is required (Debian/Ubuntu)
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_required
+      when: ansible_facts.pkg_mgr == "apt"
+
+    - name: Check if reboot is required (RHEL 8+)
+      ansible.builtin.command: dnf needs-restarting -r
+      register: needs_restart
+      ignore_errors: true
+      changed_when: false
+      when: ansible_facts.pkg_mgr == "dnf"
+
+    - name: Reboot if needed
+      ansible.builtin.reboot:
+        msg: "Reboot initiated by Ansible after package upgrades"
+        connect_timeout: 5
+        reboot_timeout: 600
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+      when: >-
+        (ansible_facts.pkg_mgr == "apt" and reboot_required.stat.exists) or
+        (ansible_facts.pkg_mgr == "dnf" and needs_restart.rc | default(-1) == 1)

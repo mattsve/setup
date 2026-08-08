@@ -80,3 +80,4 @@ When working with this repository:
 4. **Backup before destructive changes**
 5. **Test on one host first** - Use `--limit <hostname>` for changes affecting multiple hosts
 6. **Keep playbooks focused** - Each playbook should have a single, clear purpose
+7. **Place new playbooks in ansible/playbooks/** - All Ansible playbooks belong in this directory
