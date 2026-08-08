@@ -25,22 +25,26 @@ The repository uses a dynamic inventory plugin to automatically discover all VMs
 
 List all discovered hosts and groups:
 ```bash
-op run --env-file ansible/.env -- ansible-inventory -i ansible/inventory --list
+cd ansible
+op run --env-file .env -- ansible-inventory -i inventory --list
 ```
 
 Run a playbook against all hosts:
 ```bash
-op run --env-file ansible/.env -- ansible-playbook -i ansible/inventory playbooks/update_all_packages.yaml
+cd ansible
+op run --env-file .env -- ansible-playbook playbooks/update_all_packages.yaml
 ```
 
 Target specific groups:
 ```bash
-op run --env-file ansible/.env -- ansible-playbook -i ansible/inventory --limit proxmox_tags_updateable ansible/playbooks/update_all_packages.yaml
+cd ansible
+op run --env-file .env -- ansible-playbook --limit proxmox_tags_updateable ansible/playbooks/update_all_packages.yaml
 ```
 
 ## NUT setup
 ```bash
-ansible-playbook -i ansible/inventory/physical.yaml ansible/playbooks/nut.yaml
+cd ansible
+ansible-playbook -i inventory/physical.yaml playbooks/nut.yaml
 ```
 
 ## Secrets
