@@ -14,10 +14,10 @@ nut_ups:
 nut_users:
   - name: monuser
     password: "{{ nut_monuser_password | default('secret') }}"
-    acl: "upsmon slave"
+    acl: "upsmon secondary"
   - name: mainuser
     password: "{{ nut_mainuser_password | default('secret2') }}"
-    acl: "upsmon master"
+    acl: "upsmon primary"
 
 # Monitor configuration
 nut_monitor_host: localhost
