@@ -6,7 +6,13 @@ token_id: ansible
 validate_certs: true
 want_facts: true
 exclude_nodes: true
+filters:
+  - "proxmox_vmtype == 'lxc'"
 keyed_groups:
   - key: proxmox_tags_parsed
     separator: ""
     prefix: proxmox_tags_
+compose:
+  ansible_connection: "'community.proxmox.proxmox_pct_remote'"
+  ansible_host: "'pve1.hem.ingenstans.se'"
+  ansible_user: "'root'"
