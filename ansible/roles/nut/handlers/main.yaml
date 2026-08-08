@@ -1,0 +1,10 @@
+---
+- name: restart nut-server
+  systemd:
+    name: "{{ nut_server_service }}"
+    state: restarted
+
+- name: restart nut-monitor
+  systemd:
+    name: "{{ nut_monitor_service }}"
+    state: restarted

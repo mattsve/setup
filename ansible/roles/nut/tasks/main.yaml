@@ -11,6 +11,7 @@
     owner: root
     group: root
     mode: 0644
+  notify: restart nut-server
 
 - name: Configure ups.conf
   template:
@@ -19,6 +20,7 @@
     owner: root
     group: root
     mode: 0644
+  notify: restart nut-server
 
 - name: Configure upsd.users
   template:
@@ -27,6 +29,7 @@
     owner: root
     group: root
     mode: 0640
+  notify: restart nut-server
 
 - name: Configure upsmon.conf
   template:
@@ -35,6 +38,7 @@
     owner: root
     group: root
     mode: 0644
+  notify: restart nut-monitor
 
 - name: Configure upsd.conf
   template:
@@ -43,6 +47,7 @@
     owner: root
     group: root
     mode: 0644
+  notify: restart nut-server
 
 - name: Copy udev rule for NUT USB UPS
   copy:
