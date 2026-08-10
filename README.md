@@ -5,7 +5,7 @@ This repository is intended to be the setup of servers in my home.
 
 Install required Ansible collection:
 ```bash
-ansible-galaxy collection install -r ansible/requirements.yml
+ansible-galaxy collection install -r ansible/requirements.yaml
 ```
 
 # Usage
@@ -17,7 +17,7 @@ The repository uses a dynamic inventory plugin to automatically discover all VMs
 ### Setup
 1. Install the required collection:
    ```bash
-   ansible-galaxy collection install -r ansible/requirements.yml
+   ansible-galaxy collection install -r ansible/requirements.yaml
    ```
 2. Ensure your 1Password CLI (`op`) is signed in and accessible
 
