@@ -52,7 +52,7 @@
 - name: Copy udev rule for NUT USB UPS
   copy:
     src: "{{ nut_udev_rule_source }}"
-    dest: /etc/udev/rules.d/62-nut-usbups.rules
+    dest: "/etc/udev/rules.d/{{ nut_udev_rule_source | basename }}"
     remote_src: true
     owner: root
     group: root

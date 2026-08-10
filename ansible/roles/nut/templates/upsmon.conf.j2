@@ -1,2 +1,2 @@
-MONITOR ups@{{ nut_monitor_host }} 1 {{ nut_monitor_user }} {{ nut_monitor_password }} {{ nut_monitor_role }}
+MONITOR {{ nut_ups_name }}@{{ nut_monitor_host }} {{ nut_monitor_power_value }} {{ nut_monitor_user }} {{ nut_monitor_password }} {{ nut_monitor_role }}
 SHUTDOWNCMD "{{ nut_shutdown_command }}"
