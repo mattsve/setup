@@ -1,6 +1,6 @@
 ---
 - name: Update all packages on Linux hosts
-  hosts: proxmox_all_lxc
+  hosts: managed_updates
   become: true
 
   tasks:
