@@ -1,0 +1,4 @@
+---
+ansible_connection: community.proxmox.proxmox_pct_remote
+ansible_host: pve1.hem.ingenstans.se
+ansible_user: root

@@ -1,0 +1,3 @@
+---
+ansible_host: "{{ inventory_hostname }}.hem.ingenstans.se"
+ansible_user: root

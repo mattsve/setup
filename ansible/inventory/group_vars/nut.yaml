@@ -1,0 +1,3 @@
+---
+nut_monuser_password: "secret"
+nut_mainuser_password: "{{ lookup('community.general.onepassword', 'op://private/Proxmox/nut') }}"

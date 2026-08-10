@@ -1,0 +1,14 @@
+---
+# postfix_relay currently applies to every discovered Proxmox node.
+# Expressed as a child-group relationship (not a static host list) so newly
+# discovered nodes are included automatically.
+postfix_relay:
+  children:
+    proxmox_nodes:
+
+# nut is tied to which physical host has the USB UPS attached, not
+# "every proxmox node" - so it's an explicit host list rather than a
+# child-group relationship.
+nut:
+  hosts:
+    pve1: {}
