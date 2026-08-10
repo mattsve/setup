@@ -1,0 +1,18 @@
+---
+# QEMV VMs aren't reachable via pct exec like LXC, and unlike Proxmox nodes
+# they have no DNS record - so ansible_host is derived from the qemu-guest-agent
+# facts (want_facts: true in inventory/proxmox.yaml), matching the primary NIC's
+# MAC address (proxmox_net0) to the interface it reports and taking its IPv4
+# address. This generalizes to any future VM automatically, as long as the
+# guest agent is installed and running.
+ansible_host: >-
+  {{
+    proxmox_agent_interfaces
+    | selectattr('mac-address', 'equalto', (proxmox_net0.values() | select('match', '^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$') | first | lower))
+    | map(attribute='ip-addresses')
+    | first
+    | select('match', '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/')
+    | map('regex_replace', '/.*$', '')
+    | first
+  }}
+ansible_user: root
