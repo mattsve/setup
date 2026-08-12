@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Purpose
 
-Ansible configuration for provisioning and managing home lab servers (Proxmox host and its LXC containers).
+Ansible configuration for provisioning and managing home lab servers (Proxmox host and its LXC containers), plus an OpenTofu configuration (`tofu/`) for provisioning the Proxmox guests themselves. OpenTofu owns resource lifecycle (creating/destroying LXCs/VMs); Ansible owns in-guest configuration on top of whatever OpenTofu creates — the two don't overlap.
 
 ## Setup
 
@@ -53,3 +53,18 @@ Each playbook then just does `hosts: <group-name>` with no `when:` gate (e.g. `p
 - `postfix_relay` — configures Postfix to relay outbound mail through an external SMTP host (`smtp.mailbox.org` by default) using SASL auth.
 
 Both roles follow the same shape: `defaults/main.yaml` (config vars), `tasks/main.yaml` (install package → template configs, each notifying a handler → enable/start service), `handlers/main.yaml` (restart-on-change), `templates/*.j2` (config files rendered from vars).
+
+## OpenTofu (`tofu/`)
+
+Provider: `bpg/proxmox`, authenticating with its own `root@pam!opentofu` API token — separate from the `root@pam!ansible` token the Ansible inventory uses, so the two tools don't share credentials (same Proxmox host, `pve1.hem.ingenstans.se`). Run commands from `tofu/`:
+
+```bash
+op run --env-file .env -- tofu plan
+op run --env-file .env -- tofu apply
+```
+
+`tofu/.env` (gitignored) holds `TF_VAR_proxmox_token_secret=op://private/Proxmox/opentofu-api-token` (a field on the same `Proxmox` 1Password item Ansible's secrets live on, alongside `ansible-api-token`). `provider.tf` builds the full `api_token` string (`user!tokenid=secret`) from that var; only the secret half is out of tree.
+
+The `opentofu` token needs more than the `PVEAdmin` role: any resource that downloads by URL (e.g. `proxmox_download_file`, used for CT templates) calls Proxmox's `query-url-metadata` endpoint, which requires `Sys.AccessNetwork` — not covered by `PVEAdmin` or any built-in role short of full `Administrator`. Granted narrowly instead: a custom `AccessNetwork` role (just `Sys.AccessNetwork`) assigned to the token on `/nodes` (propagated, so it covers `pve1` and any future node) rather than handing out `Administrator` on `/`.
+
+State is local (`terraform.tfstate`, gitignored) — deliberate for a single-operator, single-machine homelab: local state avoids standing up a remote backend to solve a locking problem that doesn't exist here. The tradeoff is that state isn't backed up independently of this repo's `tofu/` directory; if this machine is lost with no backup, the Proxmox resources OpenTofu created keep running untouched, but reattaching them requires `tofu import` per resource. `.terraform.lock.hcl` **is** committed (pins provider version/hashes); `.terraform/` and `*.tfstate*` are not.
