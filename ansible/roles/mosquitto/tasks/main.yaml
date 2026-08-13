@@ -38,7 +38,7 @@
 
 - name: Configure mosquitto listeners
   template:
-    src: mosquitto.conf.j2
+    src: mqtt.conf.j2
     dest: /etc/mosquitto/conf.d/mqtt.conf
     owner: root
     group: root
