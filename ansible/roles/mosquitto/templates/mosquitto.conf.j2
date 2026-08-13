@@ -3,9 +3,14 @@ allow_anonymous {{ mosquitto_allow_anonymous | lower }}
 persistence {{ mosquitto_persistence | lower }}
 persistence_location {{ mosquitto_persistence_location }}
 
+{% if mosquitto_tls_enabled | bool %}
 # Plaintext, for units that don't support TLS.
 listener {{ mosquitto_plain_port }}
 
 listener {{ mosquitto_tls_port }}
 certfile {{ mosquitto_cert_dir }}/fullchain.pem
 keyfile {{ mosquitto_cert_dir }}/privkey.pem
+{% else %}
+# No TLS: this host isn't in the certbot group, so there's no cert to serve.
+listener {{ mosquitto_plain_port }}
+{% endif %}

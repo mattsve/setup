@@ -21,6 +21,7 @@
     group: mosquitto
     mode: 0644
   notify: restart mosquitto
+  when: mosquitto_tls_enabled | bool
 
 - name: Copy TLS private key for mosquitto
   copy:
@@ -31,8 +32,9 @@
     group: mosquitto
     mode: 0640
   notify: restart mosquitto
+  when: mosquitto_tls_enabled | bool
 
-- name: Configure mosquitto TLS listener
+- name: Configure mosquitto listeners
   template:
     src: mosquitto.conf.j2
     dest: /etc/mosquitto/conf.d/mqtt.conf
@@ -48,6 +50,7 @@
     owner: root
     group: root
     mode: 0755
+  when: mosquitto_tls_enabled | bool
 
 - name: Enable and start mosquitto
   systemd:

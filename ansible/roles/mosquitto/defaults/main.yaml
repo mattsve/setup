@@ -5,7 +5,11 @@
 # so this lines up with the cert the certbot role already requested for this host.
 mosquitto_domain: "{{ inventory_hostname }}.hem.ingenstans.se"
 
-# TLS listener, no client authentication.
+# TLS listener, no client authentication. Only makes sense if certbot has
+# actually issued a cert for this host - derived from certbot group
+# membership rather than a separate flag, so there's one source of truth
+# (mirrors how playbooks target groups instead of a group-plus-flag pair).
+mosquitto_tls_enabled: "{{ 'certbot' in group_names }}"
 mosquitto_tls_port: 8883
 mosquitto_allow_anonymous: true
 
