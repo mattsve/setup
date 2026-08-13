@@ -28,15 +28,14 @@ certbot:
   children:
     proxmox_tags_certbot:
 
-# mosquitto is tied to a specific single-purpose LXC (its Proxmox hostname
-# is "mqtt"), not an opt-in feature that could apply to arbitrary hosts -
-# same reasoning as `nut`, so it's an explicit host list rather than a tag
-# alias. Named after the role/playbook (like every other group here), not
-# the target host - naming it "mqtt" collides with the host of the same
-# name and makes Ansible merge the two ambiguously.
+# mosquitto is opted-in per guest via the "mosquitto" Proxmox tag, same
+# alias pattern as certbot/managed_updates/autologin - deploying it is a
+# choice, not something fixed by physical hardware (unlike `nut`), so new
+# single-purpose apps should follow this pattern rather than an explicit
+# host list.
 mosquitto:
-  hosts:
-    mqtt: {}
+  children:
+    proxmox_tags_mosquitto:
 
 # autologin is opted-in per LXC container via the "autologin" Proxmox tag,
 # same alias pattern as certbot/managed_updates.
