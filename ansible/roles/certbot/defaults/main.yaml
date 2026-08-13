@@ -1,0 +1,15 @@
+---
+# Certbot / Let's Encrypt defaults
+
+# Email registered with Let's Encrypt for expiry/renewal notices
+certbot_email: "mattias@ingenstans.se"
+
+# Domains to request a certificate for. Defaults to the host's own name
+# under hem.ingenstans.se; override or extend in host_vars to add more.
+certbot_domains:
+  - "{{ inventory_hostname }}.hem.ingenstans.se"
+
+# Cloudflare API token used for the DNS-01 challenge (dns_cloudflare_api_token
+# needs Zone:DNS:Edit on the relevant zone). Actual value supplied via
+# group_vars/certbot.yaml.
+certbot_cloudflare_api_token: ""

@@ -1,0 +1,11 @@
+---
+- name: Configure certbot for Let's Encrypt certificates
+  hosts: certbot
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Import certbot role
+      import_role:
+        name: certbot
+      tags: certbot

@@ -7,7 +7,7 @@ resource "proxmox_virtual_environment_container" "mqtt" {
   protection            = false
   start_on_boot         = true
   started               = true
-  tags                  = ["managed-updates"]
+  tags                  = ["managed-updates", "certbot"]
   template              = false
   unprivileged          = true
 

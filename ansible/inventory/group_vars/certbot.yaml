@@ -1,0 +1,2 @@
+---
+certbot_cloudflare_api_token: "{{ lookup('community.general.onepassword', 'op://private/Proxmox/cloudflare-api-token') }}"

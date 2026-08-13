@@ -1,0 +1,33 @@
+---
+- name: Install certbot and Cloudflare DNS plugin
+  package:
+    name:
+      - certbot
+      - python3-certbot-dns-cloudflare
+    state: present
+
+- name: Configure Cloudflare API token for DNS-01 challenge
+  template:
+    src: cloudflare.ini.j2
+    dest: /etc/letsencrypt/cloudflare.ini
+    owner: root
+    group: root
+    mode: 0600
+
+- name: Request certificate via Cloudflare DNS-01 challenge
+  command:
+    cmd: >
+      certbot certonly
+      --dns-cloudflare
+      --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini
+      --non-interactive
+      --agree-tos
+      --email {{ certbot_email }}
+      {{ certbot_domains | map('regex_replace', '^(.*)$', '-d \1') | join(' ') }}
+    creates: "/etc/letsencrypt/live/{{ certbot_domains[0] }}/fullchain.pem"
+
+- name: Enable and start certbot renewal timer
+  systemd:
+    name: certbot.timer
+    state: started
+    enabled: true

@@ -20,3 +20,10 @@ nut:
 managed_updates:
   children:
     proxmox_tags_managed_updates:
+
+# certbot is opted-in per guest via the "certbot" Proxmox tag, same alias
+# pattern as managed_updates: the playbook targets a name defined here
+# rather than a plugin implementation detail.
+certbot:
+  children:
+    proxmox_tags_certbot:
