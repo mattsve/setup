@@ -28,7 +28,7 @@ Update packages on every LXC container or QEMU VM tagged `managed-updates` in Pr
 op run --env-file .env -- ansible-playbook playbooks/update_all_packages.yaml
 ```
 
-Run a role-tagged playbook (tags: `nut`, `postfix`, `certbot`) — like other playbooks, this needs the Proxmox API to discover `pve1` via the dynamic inventory, even though NUT itself connects over plain SSH:
+Run a role-tagged playbook (tags: `nut`, `postfix`, `certbot`, `mosquitto`, `autologin`, `update_all_packages`) — like other playbooks, this needs the Proxmox API to discover `pve1` via the dynamic inventory, even though NUT itself connects over plain SSH:
 ```bash
 op run --env-file .env -- ansible-playbook --tags nut playbooks/nut.yaml
 ```
