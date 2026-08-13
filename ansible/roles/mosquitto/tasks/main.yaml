@@ -1,7 +1,9 @@
 ---
 - name: Install mosquitto package
   package:
-    name: mosquitto
+    name: 
+      - mosquitto
+      - mosquitto-clients
     state: present
 
 - name: Create local cert directory
