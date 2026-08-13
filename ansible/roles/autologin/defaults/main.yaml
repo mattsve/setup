@@ -1,0 +1,6 @@
+---
+# QEMU VMs boot a normal tty1 getty; LXC containers under systemd use
+# container-getty@1.service instead (what `pct console` attaches to).
+# Derived from group membership rather than a separate flag, same pattern
+# as mosquitto_tls_enabled.
+autologin_getty_unit: "{{ 'getty@tty1.service' if 'proxmox_all_qemu' in group_names else 'container-getty@1.service' }}"
