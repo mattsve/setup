@@ -33,6 +33,11 @@ Run a role-tagged playbook (tags: `nut`, `postfix`, `certbot`) — like other pl
 op run --env-file .env -- ansible-playbook --tags nut playbooks/nut.yaml
 ```
 
+Apply everything in one go — `playbooks/site.yaml` just `import_playbook`s every other playbook in order, purely as a convenience entrypoint; each playbook remains independently runnable as shown above:
+```bash
+op run --env-file .env -- ansible-playbook playbooks/site.yaml
+```
+
 ## Architecture
 
 **One dynamic inventory covers everything:** `inventory/proxmox.yaml` (`community.proxmox.proxmox` plugin) discovers all LXC containers, QEMU VMs, and the node itself on the Proxmox host at `pve1.hem.ingenstans.se` via its API — no `filters`/`exclude_nodes` needed. The plugin auto-creates groups per type (`proxmox_all_lxc`, `proxmox_all_qemu`, `proxmox_nodes`, etc.), and every guest (LXC or QEMU) is additionally grouped by its Proxmox tags (`proxmox_tags_<tag>`, hyphens in tag names become underscores — e.g. tag `managed-updates` → group `proxmox_tags_managed_updates`, wrapped by `managed_updates` in `groups.yaml` — see below). Results are cached (`.cache/`, jsonfile, 1h TTL) since inventory is regenerated from the API on every run. This means every playbook run needs `op run --env-file .env --` (for `PROXMOX_TOKEN_SECRET`), even for playbooks like `nut.yaml` that only ever connect over SSH — the API is just how the host gets discovered.

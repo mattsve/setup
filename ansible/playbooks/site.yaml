@@ -1,0 +1,7 @@
+---
+- import_playbook: nut.yaml
+- import_playbook: postfix_relay.yaml
+- import_playbook: certbot.yaml
+- import_playbook: mosquitto.yaml
+- import_playbook: autologin.yaml
+- import_playbook: update_all_packages.yaml
