@@ -1,0 +1,10 @@
+---
+- name: Configure console autologin for tagged LXC containers
+  hosts: autologin
+  become: true
+
+  tasks:
+    - name: Import autologin role
+      import_role:
+        name: autologin
+      tags: autologin

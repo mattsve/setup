@@ -37,3 +37,9 @@ certbot:
 mosquitto:
   hosts:
     mqtt: {}
+
+# autologin is opted-in per LXC container via the "autologin" Proxmox tag,
+# same alias pattern as certbot/managed_updates.
+autologin:
+  children:
+    proxmox_tags_autologin:

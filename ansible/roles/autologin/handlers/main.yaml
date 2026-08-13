@@ -1,0 +1,6 @@
+---
+- name: restart container-getty
+  systemd:
+    name: container-getty@1.service
+    daemon_reload: true
+    state: restarted

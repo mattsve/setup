@@ -1,0 +1,17 @@
+---
+- name: Create override directory for container-getty@1.service
+  file:
+    path: /etc/systemd/system/container-getty@1.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Configure root autologin on container console
+  template:
+    src: override.conf.j2
+    dest: /etc/systemd/system/container-getty@1.service.d/override.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart container-getty
