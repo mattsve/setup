@@ -1,0 +1,26 @@
+---
+# Mosquitto MQTT broker defaults
+
+# Domain the TLS cert was issued for - same default pattern as certbot_domains,
+# so this lines up with the cert the certbot role already requested for this host.
+mosquitto_domain: "{{ inventory_hostname }}.hem.ingenstans.se"
+
+# TLS listener, no client authentication.
+mosquitto_tls_port: 8883
+mosquitto_allow_anonymous: true
+
+# Plaintext listener alongside the TLS one, for units that don't support TLS.
+mosquitto_plain_port: 1883
+
+# Where certbot put the live cert.
+mosquitto_letsencrypt_dir: "/etc/letsencrypt/live/{{ mosquitto_domain }}"
+
+# Local copy mosquitto's unprivileged user can actually read - the
+# /etc/letsencrypt archive directory isn't traversable by non-root.
+mosquitto_cert_dir: /etc/mosquitto/certs
+
+mosquitto_service: mosquitto
+
+# Retain messages/subscriptions across restarts.
+mosquitto_persistence: true
+mosquitto_persistence_location: /var/lib/mosquitto/

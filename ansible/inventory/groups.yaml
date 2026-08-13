@@ -27,3 +27,13 @@ managed_updates:
 certbot:
   children:
     proxmox_tags_certbot:
+
+# mosquitto is tied to a specific single-purpose LXC (its Proxmox hostname
+# is "mqtt"), not an opt-in feature that could apply to arbitrary hosts -
+# same reasoning as `nut`, so it's an explicit host list rather than a tag
+# alias. Named after the role/playbook (like every other group here), not
+# the target host - naming it "mqtt" collides with the host of the same
+# name and makes Ansible merge the two ambiguously.
+mosquitto:
+  hosts:
+    mqtt: {}

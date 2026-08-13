@@ -1,0 +1,11 @@
+---
+- name: Configure Mosquitto MQTT broker
+  hosts: mosquitto
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Import mosquitto role
+      import_role:
+        name: mosquitto
+      tags: mosquitto

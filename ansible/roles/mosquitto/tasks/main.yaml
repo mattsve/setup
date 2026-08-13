@@ -1,0 +1,56 @@
+---
+- name: Install mosquitto package
+  package:
+    name: mosquitto
+    state: present
+
+- name: Create local cert directory
+  file:
+    path: "{{ mosquitto_cert_dir }}"
+    state: directory
+    owner: mosquitto
+    group: mosquitto
+    mode: 0750
+
+- name: Copy TLS certificate for mosquitto
+  copy:
+    src: "{{ mosquitto_letsencrypt_dir }}/fullchain.pem"
+    dest: "{{ mosquitto_cert_dir }}/fullchain.pem"
+    remote_src: true
+    owner: mosquitto
+    group: mosquitto
+    mode: 0644
+  notify: restart mosquitto
+
+- name: Copy TLS private key for mosquitto
+  copy:
+    src: "{{ mosquitto_letsencrypt_dir }}/privkey.pem"
+    dest: "{{ mosquitto_cert_dir }}/privkey.pem"
+    remote_src: true
+    owner: mosquitto
+    group: mosquitto
+    mode: 0640
+  notify: restart mosquitto
+
+- name: Configure mosquitto TLS listener
+  template:
+    src: mosquitto.conf.j2
+    dest: /etc/mosquitto/conf.d/mqtt.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart mosquitto
+
+- name: Deploy certbot renewal hook to refresh mosquitto's cert copy
+  template:
+    src: certbot-deploy-hook.sh.j2
+    dest: /etc/letsencrypt/renewal-hooks/deploy/mosquitto.sh
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Enable and start mosquitto
+  systemd:
+    name: "{{ mosquitto_service }}"
+    state: started
+    enabled: true
