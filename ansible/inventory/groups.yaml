@@ -60,9 +60,11 @@ ssh:
   children:
     proxmox_tags_ssh:
 
-# plex is opted-in per guest via the "plex" Proxmox tag, same alias pattern
-# as certbot/mosquitto/autologin: whichever LXC container or QEMU VM is
-# tagged "plex" gets Plex Media Server installed.
-plex:
+# plex_media is opted-in per guest via the "plex" Proxmox tag, same alias
+# pattern as certbot/mosquitto/autologin: whichever LXC container or QEMU
+# VM is tagged "plex" gets Plex Media Server installed. Named plex_media
+# rather than plex to avoid colliding with the "plex" VM's own hostname -
+# Ansible warns/misbehaves when a group and a host share a name.
+plex_media:
   children:
     proxmox_tags_plex:

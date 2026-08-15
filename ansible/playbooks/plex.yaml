@@ -1,6 +1,6 @@
 ---
 - name: Install Plex Media Server
-  hosts: plex
+  hosts: plex_media
   become: true
   gather_facts: true
 

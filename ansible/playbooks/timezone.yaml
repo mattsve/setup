@@ -1,0 +1,11 @@
+---
+- name: Configure system timezone
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Import timezone role
+      import_role:
+        name: timezone
+      tags: timezone
