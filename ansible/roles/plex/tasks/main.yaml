@@ -1,0 +1,58 @@
+---
+- name: Install cifs-utils (required to mount the media share)
+  package:
+    name: cifs-utils
+    state: present
+
+- name: Create media mount point
+  file:
+    path: "{{ plex_media_mount_point }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Configure Samba credentials for media share
+  template:
+    src: samba-credentials.j2
+    dest: /etc/samba/credentials-media
+    owner: root
+    group: root
+    mode: 0600
+
+- name: Mount media share
+  mount:
+    path: "{{ plex_media_mount_point }}"
+    src: "{{ plex_media_share }}"
+    fstype: cifs
+    opts: "credentials=/etc/samba/credentials-media,ro,_netdev"
+    state: mounted
+
+- name: Install python3-debian (required by deb822_repository)
+  package:
+    name: python3-debian
+    state: present
+
+- name: Add Plex apt repository
+  deb822_repository:
+    name: plexmediaserver
+    types: deb
+    uris: "{{ plex_apt_repo_uri }}"
+    suites: public
+    components: main
+    signed_by: "{{ plex_apt_key_url }}"
+
+- name: Update apt cache
+  apt:
+    update_cache: true
+
+- name: Install Plex Media Server
+  package:
+    name: plexmediaserver
+    state: present
+
+- name: Enable and start Plex Media Server
+  systemd:
+    name: plexmediaserver
+    state: started
+    enabled: true

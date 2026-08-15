@@ -1,0 +1,11 @@
+---
+- name: Install Plex Media Server
+  hosts: plex
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Import plex role
+      import_role:
+        name: plex
+      tags: plex

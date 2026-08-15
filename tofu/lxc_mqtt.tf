@@ -3,6 +3,7 @@ resource "proxmox_virtual_environment_container" "mqtt" {
   environment_variables = {}
   hook_script_file_id   = ""
   node_name             = "pve1"
+  vm_id                 = 100
   pool_id               = null
   protection            = false
   start_on_boot         = true

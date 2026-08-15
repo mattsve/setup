@@ -4,5 +4,6 @@
 - import_playbook: certbot.yaml
 - import_playbook: mosquitto.yaml
 - import_playbook: autologin.yaml
+- import_playbook: plex.yaml
 - import_playbook: unused_services.yaml
 - import_playbook: update_all_packages.yaml

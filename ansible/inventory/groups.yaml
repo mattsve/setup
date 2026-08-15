@@ -59,3 +59,10 @@ unused_services:
 ssh:
   children:
     proxmox_tags_ssh:
+
+# plex is opted-in per guest via the "plex" Proxmox tag, same alias pattern
+# as certbot/mosquitto/autologin: whichever LXC container or QEMU VM is
+# tagged "plex" gets Plex Media Server installed.
+plex:
+  children:
+    proxmox_tags_plex:

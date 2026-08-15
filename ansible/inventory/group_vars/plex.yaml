@@ -1,0 +1,3 @@
+---
+plex_samba_username: "plex"
+plex_samba_password: "{{ lookup('community.general.onepassword', 'op://private/l-space/plex') }}"
