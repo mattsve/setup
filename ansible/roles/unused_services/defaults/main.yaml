@@ -1,0 +1,5 @@
+---
+# sshd is the one exception among the stock services this role trims -
+# opt back in via the "ssh" Proxmox tag for guests that need direct SSH
+# access, same derive-from-group-membership pattern as mosquitto_tls_enabled.
+unused_services_keep_ssh: "{{ 'ssh' in group_names }}"

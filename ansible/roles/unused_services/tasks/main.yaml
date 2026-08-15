@@ -1,0 +1,26 @@
+---
+- name: Disable and stop cron
+  systemd:
+    name: cron
+    state: stopped
+    enabled: false
+
+- name: Disable and stop postfix
+  systemd:
+    name: postfix
+    state: stopped
+    enabled: false
+
+- name: Disable and stop sshd
+  systemd:
+    name: ssh
+    state: stopped
+    enabled: false
+  when: not unused_services_keep_ssh
+
+- name: Enable and start sshd
+  systemd:
+    name: ssh
+    state: started
+    enabled: true
+  when: unused_services_keep_ssh

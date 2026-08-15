@@ -42,3 +42,20 @@ mosquitto:
 autologin:
   children:
     proxmox_tags_autologin:
+
+# unused_services applies to every discovered LXC container - unconditional
+# child-group relationship (not opt-in) since the stock Debian LXC template
+# ships cron and postfix enabled by default, and neither is used by our
+# stack (mail relaying is postfix_relay's job on proxmox_nodes, not this).
+unused_services:
+  children:
+    proxmox_all_lxc:
+
+# ssh is opted-in per LXC container via the "ssh" Proxmox tag, same alias
+# pattern as certbot/mosquitto/autologin. unused_services disables sshd on
+# every LXC container by default (Ansible reaches them via pct exec, not
+# SSH); tagging a guest "ssh" keeps it running instead for guests that
+# genuinely need direct SSH access.
+ssh:
+  children:
+    proxmox_tags_ssh:

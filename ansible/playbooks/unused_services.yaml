@@ -1,0 +1,10 @@
+---
+- name: Trim stock services on LXC containers
+  hosts: unused_services
+  become: true
+
+  tasks:
+    - name: Import unused_services role
+      import_role:
+        name: unused_services
+      tags: unused_services

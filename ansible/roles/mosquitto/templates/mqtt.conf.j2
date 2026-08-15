@@ -1,8 +1,5 @@
 allow_anonymous {{ mosquitto_allow_anonymous | lower }}
 
-persistence {{ mosquitto_persistence | lower }}
-persistence_location {{ mosquitto_persistence_location }}
-
 {% if mosquitto_tls_enabled | bool %}
 # Plaintext, for units that don't support TLS.
 listener {{ mosquitto_plain_port }}

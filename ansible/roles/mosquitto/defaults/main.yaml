@@ -24,7 +24,3 @@ mosquitto_letsencrypt_dir: "/etc/letsencrypt/live/{{ mosquitto_domain }}"
 mosquitto_cert_dir: /etc/mosquitto/certs
 
 mosquitto_service: mosquitto
-
-# Retain messages/subscriptions across restarts.
-mosquitto_persistence: true
-mosquitto_persistence_location: /var/lib/mosquitto/

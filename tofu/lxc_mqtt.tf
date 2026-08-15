@@ -28,7 +28,7 @@ resource "proxmox_virtual_environment_container" "mqtt" {
 
   features {
     fuse    = false
-    keyctl  = true
+    keyctl  = false
     mknod   = false
     mount   = []
     nesting = true
@@ -62,7 +62,7 @@ resource "proxmox_virtual_environment_container" "mqtt" {
   }
 
   operating_system {
-    template_file_id = ""
+    template_file_id = proxmox_download_file.debian_13_standard.id
     type             = "debian"
   }
 }
