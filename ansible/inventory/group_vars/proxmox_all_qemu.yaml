@@ -15,4 +15,9 @@ ansible_host: >-
     | map('regex_replace', '/.*$', '')
     | first
   }}
-ansible_user: root
+# VMs provisioned with a cloud-init user_account (tofu's `initialization.user_account`)
+# expose that username as the raw `ciuser` config value, surfaced here as
+# proxmox_ciuser - so cloud-init VMs are reached as that user (assumed to be
+# sudo-capable) automatically, with no per-host override needed. VMs with no
+# cloud-init user configured fall back to root.
+ansible_user: "{{ proxmox_ciuser | default('root') }}"

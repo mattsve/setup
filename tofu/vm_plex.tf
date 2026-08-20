@@ -2,7 +2,7 @@ resource "proxmox_virtual_environment_vm" "plex" {
   name      = "plex"
   node_name = "pve1"
   vm_id     = 103
-  tags      = ["managed-updates", "plex"]
+  tags      = ["managed-updates", "plex", "autologin"]
   on_boot   = true
   started   = true
 
@@ -29,8 +29,9 @@ resource "proxmox_virtual_environment_vm" "plex" {
   }
 
   initialization {
-    datastore_id = "storage-zfs"
-    interface    = "ide2"
+    datastore_id        = "storage-zfs"
+    interface           = "ide2"
+    vendor_data_file_id = proxmox_virtual_environment_file.vm_vendor_data.id
 
     ip_config {
       ipv4 {

@@ -12,6 +12,14 @@
     group: root
     mode: 0755
 
+- name: Create /etc/samba directory
+  file:
+    path: /etc/samba
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
 - name: Configure Samba credentials for media share
   template:
     src: samba-credentials.j2
