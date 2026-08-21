@@ -1,0 +1,17 @@
+---
+# The proxy fronts an arbitrary/growing set of vhosts under hem.ingenstans.se,
+# not just its own name - a wildcard cert means adding a new caddy_proxies
+# entry below never requires touching the cert too.
+certbot_domains:
+  - "hem.ingenstans.se"
+  - "*.hem.ingenstans.se"
+
+caddy_proxies:
+  - hostname: plex.hem.ingenstans.se
+    backend: 10.0.2.3:32400
+  - hostname: pve.hem.ingenstans.se
+    backend: 10.0.0.2:8006
+    backend_scheme: https
+    backend_tls_insecure: true
+  - hostname: pulse.hem.ingenstans.se
+    backend: 10.0.2.4:7655

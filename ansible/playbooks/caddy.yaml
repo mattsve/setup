@@ -1,0 +1,11 @@
+---
+- name: Configure Caddy reverse proxy
+  hosts: caddy
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Import caddy role
+      import_role:
+        name: caddy
+      tags: caddy

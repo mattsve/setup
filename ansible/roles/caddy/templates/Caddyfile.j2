@@ -1,0 +1,12 @@
+{% for proxy in caddy_proxies %}
+{{ proxy.hostname }} {
+	tls {{ caddy_cert_dir }}/fullchain.pem {{ caddy_cert_dir }}/privkey.pem
+	reverse_proxy {{ proxy.backend_scheme | default('http') }}://{{ proxy.backend }} {
+{% if proxy.backend_tls_insecure | default(false) %}
+		transport http {
+			tls_insecure_skip_verify
+		}
+{% endif %}
+	}
+}
+{% endfor %}

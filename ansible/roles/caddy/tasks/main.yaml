@@ -1,0 +1,74 @@
+---
+- name: Install python3-debian (required by deb822_repository)
+  package:
+    name: python3-debian
+    state: present
+
+- name: Add Caddy apt repository
+  deb822_repository:
+    name: caddy-stable
+    types: deb
+    uris: "{{ caddy_apt_repo_uri }}"
+    suites: any-version
+    components: main
+    signed_by: "{{ caddy_apt_key_url }}"
+
+- name: Update apt cache
+  apt:
+    update_cache: true
+
+- name: Install Caddy
+  package:
+    name: caddy
+    state: present
+
+- name: Create local cert directory
+  file:
+    path: "{{ caddy_cert_dir }}"
+    state: directory
+    owner: caddy
+    group: caddy
+    mode: 0750
+
+- name: Copy TLS certificate for caddy
+  copy:
+    src: "{{ caddy_letsencrypt_dir }}/fullchain.pem"
+    dest: "{{ caddy_cert_dir }}/fullchain.pem"
+    remote_src: true
+    owner: caddy
+    group: caddy
+    mode: 0644
+  notify: restart caddy
+
+- name: Copy TLS private key for caddy
+  copy:
+    src: "{{ caddy_letsencrypt_dir }}/privkey.pem"
+    dest: "{{ caddy_cert_dir }}/privkey.pem"
+    remote_src: true
+    owner: caddy
+    group: caddy
+    mode: 0640
+  notify: restart caddy
+
+- name: Configure Caddy reverse-proxy routes
+  template:
+    src: Caddyfile.j2
+    dest: /etc/caddy/Caddyfile
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart caddy
+
+- name: Deploy certbot renewal hook to refresh caddy's cert copy
+  template:
+    src: certbot-deploy-hook.sh.j2
+    dest: /etc/letsencrypt/renewal-hooks/deploy/caddy.sh
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Enable and start caddy
+  systemd:
+    name: "{{ caddy_service }}"
+    state: started
+    enabled: true

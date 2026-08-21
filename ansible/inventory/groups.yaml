@@ -68,3 +68,10 @@ ssh:
 plex_media:
   children:
     proxmox_tags_plex:
+
+# caddy is opted-in per guest via the "caddy" Proxmox tag, same alias
+# pattern as mosquitto: no rename needed (unlike plex_media) since the
+# guest that runs it is named reverse-proxy, not caddy - no collision.
+caddy:
+  children:
+    proxmox_tags_caddy:

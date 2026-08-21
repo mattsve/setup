@@ -1,0 +1,23 @@
+---
+# Caddy reverse proxy defaults
+
+caddy_apt_key_url: "https://dl.cloudsmith.io/public/caddy/stable/gpg.key"
+caddy_apt_repo_uri: "https://dl.cloudsmith.io/public/caddy/stable/deb/debian"
+
+# Cert this host requests via the certbot role - a wildcard covering every
+# vhost it fronts (see host_vars/reverse-proxy.yaml), not just its own name.
+caddy_domain: "hem.ingenstans.se"
+caddy_letsencrypt_dir: "/etc/letsencrypt/live/{{ caddy_domain }}"
+
+# Local copy caddy's unprivileged user can actually read - the
+# /etc/letsencrypt archive directory isn't traversable by non-root.
+caddy_cert_dir: /etc/caddy/certs
+
+caddy_service: caddy
+
+# Reverse-proxy routes, supplied per host (host_vars/reverse-proxy.yaml):
+#   - hostname: plex.hem.ingenstans.se
+#     backend: 10.0.2.3:32400
+#     backend_scheme: http        # optional, defaults to http
+#     backend_tls_insecure: false # optional, for self-signed backend certs
+caddy_proxies: []

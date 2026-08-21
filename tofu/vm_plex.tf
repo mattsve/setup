@@ -14,8 +14,13 @@ resource "proxmox_virtual_environment_vm" "plex" {
     cores = 4
   }
 
+  # floating == dedicated keeps the balloon device attached (so Proxmox
+  # reports real guest-reported usage instead of an RSS-based estimate -
+  # per Proxmox's own docs, the device stays useful even for "fixed"
+  # memory) without giving the host any room to actually reclaim from it.
   memory {
     dedicated = 4096
+    floating  = 4096
   }
 
   scsi_hardware = "virtio-scsi-single"
