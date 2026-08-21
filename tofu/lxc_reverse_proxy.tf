@@ -22,7 +22,7 @@ resource "proxmox_virtual_environment_container" "reverse_proxy" {
   }
 
   initialization {
-    hostname = "reverse-proxy"
+    hostname = "reverse-proxy01"
     ip_config {
       ipv4 {
         address = "10.0.2.5/22"

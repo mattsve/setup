@@ -60,18 +60,18 @@ ssh:
   children:
     proxmox_tags_ssh:
 
-# plex_media is opted-in per guest via the "plex" Proxmox tag, same alias
+# plex is opted-in per guest via the "plex" Proxmox tag, same alias
 # pattern as certbot/mosquitto/autologin: whichever LXC container or QEMU
-# VM is tagged "plex" gets Plex Media Server installed. Named plex_media
-# rather than plex to avoid colliding with the "plex" VM's own hostname -
-# Ansible warns/misbehaves when a group and a host share a name.
-plex_media:
+# VM is tagged "plex" gets Plex Media Server installed. Can be called
+# plex directly (not plex_media) since the guest itself is named plex01,
+# so there's no group/host name collision.
+plex:
   children:
     proxmox_tags_plex:
 
 # caddy is opted-in per guest via the "caddy" Proxmox tag, same alias
-# pattern as mosquitto: no rename needed (unlike plex_media) since the
-# guest that runs it is named reverse-proxy, not caddy - no collision.
+# pattern as mosquitto/plex: the guest that runs it is named
+# reverse-proxy01, not caddy - no collision either.
 caddy:
   children:
     proxmox_tags_caddy:

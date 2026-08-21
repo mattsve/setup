@@ -1,4 +1,0 @@
----
-certbot_domains:
-  - "{{ inventory_hostname }}.hem.ingenstans.se"
-  - "{{ inventory_hostname }}.k3s.ingenstans.se"

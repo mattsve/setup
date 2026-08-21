@@ -1,0 +1,10 @@
+---
+certbot_domains:
+  - "mqtt.hem.ingenstans.se"
+  - "{{ inventory_hostname }}.hem.ingenstans.se"
+  - "mqtt.k3s.ingenstans.se"
+
+# mosquitto's default (`{{ inventory_hostname }}.hem.ingenstans.se`) would
+# now resolve to mqtt01.hem.ingenstans.se, but the live cert directory is
+# named after certbot_domains[0] above (mqtt.hem.ingenstans.se).
+mosquitto_domain: "mqtt.hem.ingenstans.se"

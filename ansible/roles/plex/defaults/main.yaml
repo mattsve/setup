@@ -5,7 +5,7 @@ plex_apt_key_url: "https://downloads.plex.tv/plex-keys/PlexSign.v2.key"
 plex_apt_repo_uri: "https://repo.plex.tv/deb"
 
 # Samba media share, mounted read-only. Credentials supplied via
-# group_vars/plex_media.yaml (op://private/l-space/...).
+# group_vars/plex.yaml (op://private/l-space/...).
 plex_media_share: "//l-space.hem.ingenstans.se/data/media"
 plex_media_mount_point: "/mnt/media"
 plex_samba_username: ""

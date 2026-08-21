@@ -36,7 +36,7 @@ resource "proxmox_virtual_environment_container" "mqtt" {
   }
 
   initialization {
-    hostname = "mqtt"
+    hostname = "mqtt01"
     ip_config {
       ipv4 {
         address = "10.0.2.1/22"

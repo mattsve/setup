@@ -1,5 +1,5 @@
 resource "proxmox_virtual_environment_vm" "plex" {
-  name      = "plex"
+  name      = "plex01"
   node_name = "pve1"
   vm_id     = 103
   tags      = ["managed-updates", "plex", "autologin"]
