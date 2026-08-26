@@ -75,3 +75,10 @@ plex:
 caddy:
   children:
     proxmox_tags_caddy:
+
+# technitium is opted-in per guest via the "technitium" Proxmox tag, same
+# alias pattern as mosquitto/plex/caddy: the guest that runs it is named
+# dns01, not technitium - no collision either.
+technitium:
+  children:
+    proxmox_tags_technitium:

@@ -1,0 +1,21 @@
+---
+- name: Install curl
+  ansible.builtin.apt:
+    name: curl
+    state: present
+
+- name: Download Technitium DNS Server install script
+  get_url:
+    url: "{{ technitium_install_script_url }}"
+    dest: /tmp/technitium-install.sh
+    mode: 0755
+    force: true
+
+- name: Run Technitium DNS Server install script
+  command: /tmp/technitium-install.sh
+
+- name: Enable and start Technitium DNS Server
+  systemd:
+    name: dns
+    state: started
+    enabled: true

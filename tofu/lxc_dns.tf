@@ -1,10 +1,10 @@
-resource "proxmox_virtual_environment_container" "reverse_proxy" {
+resource "proxmox_virtual_environment_container" "dns" {
   node_name     = "pve1"
-  vm_id         = 105
+  vm_id         = 106
   start_on_boot = true
   started       = true
   unprivileged  = true
-  tags          = ["managed-updates", "autologin", "certbot", "caddy"]
+  tags          = ["managed-updates", "autologin", "technitium"]
 
   console {
     enabled   = true
@@ -14,7 +14,7 @@ resource "proxmox_virtual_environment_container" "reverse_proxy" {
 
   disk {
     datastore_id = "storage-zfs"
-    size         = 2
+    size         = 4
   }
 
   features {
@@ -22,10 +22,10 @@ resource "proxmox_virtual_environment_container" "reverse_proxy" {
   }
 
   initialization {
-    hostname = "reverse-proxy01"
+    hostname = "dns01"
     ip_config {
       ipv4 {
-        address = "10.0.2.5/22"
+        address = "10.0.2.6/22"
         gateway = "10.0.0.1"
       }
     }
@@ -41,8 +41,8 @@ resource "proxmox_virtual_environment_container" "reverse_proxy" {
     bridge = "vmbr0"
     # Pinned so SLAAC's EUI-64 derivation stays stable across rebuilds - see
     # the IPv6 addressing note in CLAUDE.md. Resulting address on the LAN's
-    # ULA (fd01:eae3:bc39:100::/64): fd01:eae3:bc39:100:be24:11ff:fecb:eab5
-    mac_address = "BC:24:11:CB:EA:B5"
+    # ULA (fd01:eae3:bc39:100::/64): fd01:eae3:bc39:100:be24:11ff:fe7d:ccf0
+    mac_address = "BC:24:11:7D:CC:F0"
   }
 
   operating_system {

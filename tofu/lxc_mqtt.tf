@@ -55,11 +55,14 @@ resource "proxmox_virtual_environment_container" "mqtt" {
     enabled      = true
     firewall     = false
     host_managed = false
-    mac_address  = "BC:24:11:42:31:C4"
-    mtu          = 0
-    name         = "eth0"
-    rate_limit   = 0
-    vlan_id      = 0
+    # Pinned so SLAAC's EUI-64 derivation stays stable across rebuilds - see
+    # the IPv6 addressing note in CLAUDE.md. Resulting address on the LAN's
+    # ULA (fd01:eae3:bc39:100::/64): fd01:eae3:bc39:100:be24:11ff:fe42:31c4
+    mac_address = "BC:24:11:42:31:C4"
+    mtu         = 0
+    name        = "eth0"
+    rate_limit  = 0
+    vlan_id     = 0
   }
 
   operating_system {

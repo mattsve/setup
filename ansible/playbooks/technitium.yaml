@@ -1,0 +1,11 @@
+---
+- name: Install Technitium DNS Server
+  hosts: technitium
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Import technitium role
+      import_role:
+        name: technitium
+      tags: technitium
