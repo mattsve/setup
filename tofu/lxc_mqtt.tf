@@ -39,7 +39,7 @@ resource "proxmox_virtual_environment_container" "mqtt" {
     hostname = "mqtt01"
     ip_config {
       ipv4 {
-        address = "10.0.2.1/22"
+        address = "10.0.2.0/22"
         gateway = "10.0.0.1"
       }
     }
