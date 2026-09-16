@@ -29,6 +29,14 @@ resource "proxmox_virtual_environment_container" "dns" {
         gateway = "10.1.50.1"
       }
     }
+    # Overrides the datacenter-wide default nameserver (10.0.0.1, OPNsense's
+    # LAN address). AdGuard Home replies to queries from its VLAN-50-facing
+    # address (10.1.50.1), not the address queried, so a client asking
+    # 10.0.0.1 gets a reply from a different source address and silently
+    # drops it as a mismatch.
+    dns {
+      servers = ["10.1.50.1"]
+    }
   }
 
   memory {

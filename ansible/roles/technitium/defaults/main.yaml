@@ -2,8 +2,10 @@
 technitium_install_script_url: "https://download.technitium.com/dns/install.sh"
 
 # Tasks run on dns01 itself (pct exec), so the API is reachable on localhost
-# regardless of the guest's LAN address.
-technitium_api_url: "http://localhost:5380"
+# regardless of the guest's LAN address. No port here - the collection's
+# modules append their own api_port (default 5380) to this URL, so
+# including it here would double it up into "localhost:5380:5380".
+technitium_api_url: "http://localhost"
 
 # API token for Technitium's REST API. Actual value supplied via
 # group_vars/technitium.yaml (see certbot_cloudflare_api_token for the same
