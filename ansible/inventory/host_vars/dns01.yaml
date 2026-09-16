@@ -39,6 +39,20 @@ technitium_records:
     ipAddress: 10.0.2.5
     ttl: 3600
 
+  # dns01 itself is static, not a DHCP lease, so it doesn't get an
+  # auto-registered record from the server scope's dnsUpdates - added by
+  # hand instead. See CLAUDE.md for the ULA/EUI-64 derivation.
+  - name: dns01.server.agb.ingenstans.se
+    zone: server.agb.ingenstans.se
+    type: A
+    ipAddress: 10.1.50.2
+    ttl: 3600
+  - name: dns01.server.agb.ingenstans.se
+    zone: server.agb.ingenstans.se
+    type: AAAA
+    ipAddress: fd01:eae3:bc39:50:be24:11ff:fe7d:ccf0
+    ttl: 3600
+
 # One scope per VLAN (see technitium_dhcp_scopes in
 # roles/technitium/defaults/main.yaml for the relay prerequisites on
 # OPNsense's side). .2-.49 held back for infra/static assignments.
