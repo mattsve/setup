@@ -1,2 +1,45 @@
 ---
 technitium_install_script_url: "https://download.technitium.com/dns/install.sh"
+
+# Tasks run on dns01 itself (pct exec), so the API is reachable on localhost
+# regardless of the guest's LAN address.
+technitium_api_url: "http://localhost:5380"
+
+# API token for Technitium's REST API. Actual value supplied via
+# group_vars/technitium.yaml (see certbot_cloudflare_api_token for the same
+# pattern). Generate it once via the web console (Administration > Sessions
+# > Create Token) - Ansible doesn't create this token itself, matching how
+# every other secret in this repo is a pre-existing value fetched via
+# 1Password, not something a role generates.
+technitium_api_token: ""
+
+# Zones to ensure exist, e.g.:
+#   - zone: hem.ingenstans.se
+#     type: Primary
+# Supplied per host in host_vars/dns01.yaml.
+technitium_zones: []
+
+# Records to ensure exist, e.g.:
+#   - name: plex.hem.ingenstans.se
+#     zone: hem.ingenstans.se
+#     type: A
+#     ipAddress: 10.0.2.5
+# Supplied per host in host_vars/dns01.yaml.
+technitium_records: []
+
+# DHCP scopes to ensure exist, one per VLAN, e.g.:
+#   - name: iot
+#     startingAddress: 10.0.20.10
+#     endingAddress: 10.0.20.250
+#     subnetMask: 255.255.255.0
+#     routerAddress: 10.0.20.1
+# Supplied per host in host_vars/dns01.yaml. dns01 stays single-homed on
+# its own VLAN; Technitium matches each relayed request to a scope by
+# subnet, so serving another VLAN needs no per-scope relay config here -
+# only DHCP relay (IP Helper) configured on OPNsense's interface for that
+# VLAN, pointing at dns01's address, plus OPNsense's own DHCP server for
+# that VLAN turned off. Both of those are done by hand on OPNsense, same
+# as the DNS/ULA config documented in CLAUDE.md - this repo doesn't manage
+# OPNsense. New scopes are created disabled by Technitium's API, so this
+# role explicitly enables each one after setting it up.
+technitium_dhcp_scopes: []

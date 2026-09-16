@@ -1,0 +1,2 @@
+---
+technitium_api_token: "{{ lookup('community.general.onepassword', 'op://private/Proxmox/technitium-api-token') }}"

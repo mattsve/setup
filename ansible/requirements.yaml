@@ -4,3 +4,5 @@ collections:
     version: ">=8.0.0"
   - name: community.proxmox
     version: ">=1.0.0"
+  - name: effectivelywild.technitium_dns
+    version: ">=1.1.0"

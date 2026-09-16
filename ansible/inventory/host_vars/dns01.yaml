@@ -1,0 +1,57 @@
+---
+technitium_zones:
+  # hem.ingenstans.se is being retired in favor of agb.ingenstans.se.
+  # certbot still issues certs for hem.ingenstans.se for now (that
+  # migration happens later, and will need both domains supported for a
+  # transition period) but the internal DNS zone itself is no longer needed.
+  - zone: agb.ingenstans.se
+    type: Primary
+  # Independent Primary zone for VLAN 50 hosts, not a delegated subdomain
+  # of agb.ingenstans.se - no NS delegation needed since the same
+  # Technitium instance is authoritative for both. The server DHCP scope's
+  # domainName points here so leases auto-register as
+  # <hostname>.server.agb.ingenstans.se. Friendly names in
+  # agb.ingenstans.se (e.g. plex.agb.ingenstans.se) can later become
+  # CNAMEs into this zone once services actually migrate to VLAN 50 - not
+  # done yet.
+  - zone: server.agb.ingenstans.se
+    type: Primary
+
+# Starter set: the hostnames caddy already reverse-proxies (see
+# host_vars/reverse-proxy01.yaml's caddy_proxies) all need to resolve
+# internally to reverse-proxy01 itself, not wherever public DNS points
+# agb.ingenstans.se. Extend this list as more internal names are needed
+# (e.g. per-host <hostname>.agb.ingenstans.se records).
+technitium_records:
+  - name: plex.agb.ingenstans.se
+    zone: agb.ingenstans.se
+    type: A
+    ipAddress: 10.0.2.5
+    ttl: 3600
+  - name: pve.agb.ingenstans.se
+    zone: agb.ingenstans.se
+    type: A
+    ipAddress: 10.0.2.5
+    ttl: 3600
+  - name: pulse.agb.ingenstans.se
+    zone: agb.ingenstans.se
+    type: A
+    ipAddress: 10.0.2.5
+    ttl: 3600
+
+# One scope per VLAN (see technitium_dhcp_scopes in
+# roles/technitium/defaults/main.yaml for the relay prerequisites on
+# OPNsense's side). .2-.49 held back for infra/static assignments.
+technitium_dhcp_scopes:
+  - name: server
+    startingAddress: 10.1.50.50
+    endingAddress: 10.1.50.250
+    subnetMask: 255.255.255.0
+    routerAddress: 10.1.50.1
+    # Auto-registers an A/PTR record per lease under server.agb.ingenstans.se,
+    # named from the client's DHCP hostname option. If leases aren't
+    # showing up in the zone, check the zone's own Dynamic Updates
+    # setting in the Technitium console too - this scope option alone
+    # may not be enough.
+    domainName: server.agb.ingenstans.se
+    dnsUpdates: true

@@ -19,3 +19,33 @@
     name: dns
     state: started
     enabled: true
+
+- name: Ensure Technitium DNS zones
+  effectivelywild.technitium_dns.technitium_dns_zone:
+    "{{ {'api_url': technitium_api_url, 'api_token': technitium_api_token, 'state': 'present'} | combine(item) }}"
+  loop: "{{ technitium_zones }}"
+  loop_control:
+    label: "{{ item.zone }}"
+
+- name: Ensure Technitium DNS records
+  effectivelywild.technitium_dns.technitium_dns_record:
+    "{{ {'api_url': technitium_api_url, 'api_token': technitium_api_token, 'state': 'present'} | combine(item) }}"
+  loop: "{{ technitium_records }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Ensure Technitium DHCP scopes
+  effectivelywild.technitium_dns.technitium_dns_set_dhcp_scope:
+    "{{ {'api_url': technitium_api_url, 'api_token': technitium_api_token} | combine(item) }}"
+  loop: "{{ technitium_dhcp_scopes }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Enable Technitium DHCP scopes
+  effectivelywild.technitium_dns.technitium_dns_enable_dhcp_scope:
+    api_url: "{{ technitium_api_url }}"
+    api_token: "{{ technitium_api_token }}"
+    name: "{{ item.name }}"
+  loop: "{{ technitium_dhcp_scopes }}"
+  loop_control:
+    label: "{{ item.name }}"
