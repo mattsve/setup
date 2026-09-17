@@ -8,5 +8,6 @@
 - import_playbook: plex.yaml
 - import_playbook: caddy.yaml
 - import_playbook: technitium.yaml
+- import_playbook: pulse.yaml
 - import_playbook: unused_services.yaml
 - import_playbook: update_all_packages.yaml

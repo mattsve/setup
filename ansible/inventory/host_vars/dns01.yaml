@@ -69,3 +69,10 @@ technitium_dhcp_scopes:
     # may not be enough.
     domainName: server.agb.ingenstans.se
     dnsUpdates: true
+    # Without this, clients got whatever Technitium's own default DNS
+    # option is (10.0.0.1 - AdGuard's LAN address), which is unreachable
+    # the same way dns01's own resolver was: AdGuard replies from its
+    # VLAN-50-facing address, not the address queried, so the reply gets
+    # silently dropped as a mismatch. This makes Technitium itself the
+    # DNS server clients get instead.
+    useThisDnsServer: true

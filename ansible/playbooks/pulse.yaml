@@ -1,0 +1,11 @@
+---
+- name: Install Pulse
+  hosts: pulse
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Import pulse role
+      import_role:
+        name: pulse
+      tags: pulse

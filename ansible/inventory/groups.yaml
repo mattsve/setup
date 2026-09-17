@@ -82,3 +82,10 @@ caddy:
 technitium:
   children:
     proxmox_tags_technitium:
+
+# pulse is opted-in per guest via the "pulse" Proxmox tag, same alias
+# pattern as plex/caddy/technitium: the guest that runs it is named
+# pulse01, not pulse - no collision either.
+pulse:
+  children:
+    proxmox_tags_pulse:

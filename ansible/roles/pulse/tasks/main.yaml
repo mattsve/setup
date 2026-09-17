@@ -1,0 +1,36 @@
+---
+- name: Install curl
+  ansible.builtin.apt:
+    name: curl
+    state: present
+
+# Unlike technitium's install script, Pulse's installer prompts via
+# /dev/tty (bypassing stdin redirection entirely, even from the remote
+# shell) when it's ambiguous whether to reinstall an already-up-to-date
+# install - pct exec always provides a real pty, so that read never gets
+# an EOF and just hangs forever instead of erroring out non-interactively.
+# There's no flag to force past it. So: install once, and rely on Pulse's
+# own installer-managed pulse-update.timer (daily, 2-6 AM) to stay current
+# instead of an Ansible-managed update step - the same pattern certbot
+# uses for cert renewal in this repo.
+- name: Check if Pulse is already installed
+  stat:
+    path: /bin/update
+  register: pulse_update_helper
+
+- name: Download Pulse install script
+  get_url:
+    url: "{{ pulse_install_script_url }}"
+    dest: /tmp/pulse-install.sh
+    mode: 0755
+  when: not pulse_update_helper.stat.exists
+
+- name: Run Pulse install script
+  ansible.builtin.shell: /tmp/pulse-install.sh < /dev/null
+  when: not pulse_update_helper.stat.exists
+
+- name: Enable and start Pulse
+  systemd:
+    name: pulse
+    state: started
+    enabled: true
