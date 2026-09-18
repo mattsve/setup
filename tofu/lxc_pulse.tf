@@ -52,6 +52,10 @@ resource "proxmox_virtual_environment_container" "pulse" {
     # the IPv6 addressing note in CLAUDE.md. Resulting address on VLAN 50's
     # ULA (fd01:eae3:bc39:50::/64): fd01:eae3:bc39:50:be24:11ff:fef7:4b74
     mac_address = "BC:24:11:F7:4B:74"
+    # Required for firewall_pulse.tf's rules to actually filter this
+    # interface's traffic - without it, Proxmox compiles the guest's
+    # firewall config but never attaches it to net0.
+    firewall = true
   }
 
   operating_system {
