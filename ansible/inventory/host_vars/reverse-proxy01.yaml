@@ -14,7 +14,7 @@ certbot_domains:
 
 caddy_proxies:
   - hostname: plex.hem.ingenstans.se
-    backend: 10.0.2.3:32400
+    backend: "[fd01:eae3:bc39:50:be24:11ff:fe82:633b]:32400"
   - hostname: pve.hem.ingenstans.se
     backend: 10.0.0.2:8006
     backend_scheme: https
@@ -22,7 +22,7 @@ caddy_proxies:
   - hostname: pulse.hem.ingenstans.se
     backend: "[fd01:eae3:bc39:50:be24:11ff:fef7:4b74]:7655"
   - hostname: plex.agb.ingenstans.se
-    backend: 10.0.2.3:32400
+    backend: "[fd01:eae3:bc39:50:be24:11ff:fe82:633b]:32400"
   - hostname: pve.agb.ingenstans.se
     backend: 10.0.0.2:8006
     backend_scheme: https
