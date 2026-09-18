@@ -15,6 +15,8 @@ technitium_zones:
   # zone now that reverse-proxy01 itself has migrated to VLAN 50.
   - zone: server.agb.ingenstans.se
     type: Primary
+  - zone: management.agb.ingenstans.se
+    type: Primary
 
 # Starter set: the hostnames caddy already reverse-proxies (see
 # host_vars/reverse-proxy01.yaml's caddy_proxies) all need to resolve
@@ -66,6 +68,12 @@ technitium_records:
     zone: server.agb.ingenstans.se
     type: AAAA
     ipAddress: fd01:eae3:bc39:50:be24:11ff:fecb:eab5
+    ttl: 3600
+  
+  - name: pve01.management.agb.ingenstans.se
+    zone: management.agb.ingenstans.se
+    type: A
+    ipAddress: 10.0.0.2
     ttl: 3600
 
 # One scope per VLAN (see technitium_dhcp_scopes in
