@@ -25,8 +25,11 @@ resource "proxmox_virtual_environment_container" "reverse_proxy" {
     hostname = "reverse-proxy01"
     ip_config {
       ipv4 {
-        address = "10.0.2.5/22"
-        gateway = "10.0.0.1"
+        # DHCP, not static - no chicken-and-egg constraint here like dns01's,
+        # so this follows pulse01's pattern instead. Lease auto-registers as
+        # reverse-proxy01.server.agb.ingenstans.se (see technitium_dhcp_scopes'
+        # dnsUpdates, ansible/inventory/host_vars/dns01.yaml).
+        address = "dhcp"
       }
     }
   }
@@ -37,11 +40,12 @@ resource "proxmox_virtual_environment_container" "reverse_proxy" {
   }
 
   network_interface {
-    name   = "eth0"
-    bridge = "vmbr0"
+    name    = "eth0"
+    bridge  = "vmbr0"
+    vlan_id = 50
     # Pinned so SLAAC's EUI-64 derivation stays stable across rebuilds - see
-    # the IPv6 addressing note in CLAUDE.md. Resulting address on the LAN's
-    # ULA (fd01:eae3:bc39:100::/64): fd01:eae3:bc39:100:be24:11ff:fecb:eab5
+    # the IPv6 addressing note in CLAUDE.md. Resulting address on VLAN 50's
+    # ULA (fd01:eae3:bc39:50::/64): fd01:eae3:bc39:50:be24:11ff:fecb:eab5
     mac_address = "BC:24:11:CB:EA:B5"
   }
 

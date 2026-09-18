@@ -1,10 +1,16 @@
 ---
-# The proxy fronts an arbitrary/growing set of vhosts under hem.ingenstans.se,
-# not just its own name - a wildcard cert means adding a new caddy_proxies
-# entry below never requires touching the cert too.
+# The proxy fronts an arbitrary/growing set of vhosts under hem.ingenstans.se
+# and, now that agb.ingenstans.se's internal zone is live (host_vars/dns01.yaml),
+# agb.ingenstans.se too - both wildcards on one cert so adding a new
+# caddy_proxies entry below never requires touching the cert. Keeping the
+# hem.ingenstans.se pair rather than dropping them is the "transition
+# period" support called out in dns01.yaml's zone comments - not removed
+# until hem.ingenstans.se is actually retired.
 certbot_domains:
   - "hem.ingenstans.se"
   - "*.hem.ingenstans.se"
+  - "agb.ingenstans.se"
+  - "*.agb.ingenstans.se"
 
 caddy_proxies:
   - hostname: plex.hem.ingenstans.se
@@ -14,4 +20,12 @@ caddy_proxies:
     backend_scheme: https
     backend_tls_insecure: true
   - hostname: pulse.hem.ingenstans.se
-    backend: 10.0.2.4:7655
+    backend: "[fd01:eae3:bc39:50:be24:11ff:fef7:4b74]:7655"
+  - hostname: plex.agb.ingenstans.se
+    backend: 10.0.2.3:32400
+  - hostname: pve.agb.ingenstans.se
+    backend: 10.0.0.2:8006
+    backend_scheme: https
+    backend_tls_insecure: true
+  - hostname: pulse.agb.ingenstans.se
+    backend: "[fd01:eae3:bc39:50:be24:11ff:fef7:4b74]:7655"
