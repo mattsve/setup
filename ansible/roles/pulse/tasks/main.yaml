@@ -3,6 +3,7 @@
   ansible.builtin.apt:
     name: curl
     state: present
+    update_cache: true
 
 # Unlike technitium's install script, Pulse's installer prompts via
 # /dev/tty (bypassing stdin redirection entirely, even from the remote

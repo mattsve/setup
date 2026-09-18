@@ -3,6 +3,7 @@
   ansible.builtin.apt:
     name: curl
     state: present
+    update_cache: true
 
 - name: Download Technitium DNS Server install script
   get_url:
