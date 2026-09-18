@@ -6,6 +6,12 @@ resource "proxmox_virtual_environment_vm" "plex" {
   on_boot   = true
   started   = true
 
+  # DHCP-addressed on VLAN 50 (below), which dns01 serves - needs dns01
+  # (order=1, tofu/lxc_dns.tf) up first to get a lease at all.
+  startup {
+    order = 2
+  }
+
   agent {
     enabled = true
   }

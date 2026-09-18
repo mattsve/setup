@@ -6,6 +6,12 @@ resource "proxmox_virtual_environment_container" "reverse_proxy" {
   unprivileged  = true
   tags          = ["managed-updates", "autologin", "certbot", "caddy"]
 
+  # DHCP-addressed on VLAN 50 (below), which dns01 serves - needs dns01
+  # (order=1, lxc_dns.tf) up first to get a lease at all.
+  startup {
+    order = 2
+  }
+
   console {
     enabled   = true
     tty_count = 2

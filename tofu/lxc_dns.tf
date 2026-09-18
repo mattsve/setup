@@ -6,6 +6,17 @@ resource "proxmox_virtual_environment_container" "dns" {
   unprivileged  = true
   tags          = ["managed-updates", "autologin", "technitium"]
 
+  # dns01 is the DHCP server for VLAN 50 (technitium_dhcp_scopes, see
+  # ansible/inventory/host_vars/dns01.yaml), so pulse01/reverse-proxy01/
+  # plex01 - all DHCP-addressed there - can't get a lease until it's up.
+  # order=1 (lower starts first) plus up_delay holds pve-guests.service off
+  # starting order=2 guests for 30s, giving dns.service and the DHCP scope
+  # time to actually be listening rather than racing the next tier.
+  startup {
+    order    = 1
+    up_delay = 30
+  }
+
   console {
     enabled   = true
     tty_count = 2
