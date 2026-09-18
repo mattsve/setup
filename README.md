@@ -41,6 +41,28 @@ cd ansible
 op run --env-file .env -- ansible-playbook --limit proxmox_tags_updateable ansible/playbooks/update_all_packages.yaml
 ```
 
+## OpenTofu (`tofu/`)
+
+The `opentofu` API token (`root@pam!opentofu`) authenticates as itself, separate
+from the `root@pam!ansible` token Ansible uses, so the two tools don't share
+credentials. The built-in `PVEAdmin` role isn't quite enough for what this
+config does, so the token also holds two narrowly-scoped custom roles rather
+than the built-in `Administrator` role:
+
+| Path     | Role            | Privilege(s)      | Why |
+|----------|-----------------|--------------------|-----|
+| `/`      | `PVEAdmin`      | (built-in)         | Baseline: create/manage LXCs, VMs, etc. |
+| `/nodes` | `AccessNetwork` | `Sys.AccessNetwork`| `proxmox_download_file` (CT/VM templates) calls Proxmox's `query-url-metadata` endpoint, which needs this - not covered by `PVEAdmin` or any built-in role short of `Administrator`. |
+| `/`      | `SysModify`     | `Sys.Modify`       | Setting a QEMU VM's `startup` block (boot order/delay) requires this, checked at `/` specifically - `/nodes`-scoped grants don't satisfy it. Only needed for VMs; LXC containers' `startup` block works under `PVEAdmin` alone. |
+
+To (re)create the two custom roles and grant them, run on `pve1`:
+```bash
+pveum role add AccessNetwork -privs Sys.AccessNetwork
+pveum role add SysModify -privs Sys.Modify
+pveum acl modify /nodes --tokens 'root@pam!opentofu' --roles AccessNetwork
+pveum acl modify / --tokens 'root@pam!opentofu' --roles SysModify
+```
+
 ## NUT setup
 ```bash
 cd ansible
