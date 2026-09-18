@@ -1,0 +1,5 @@
+---
+- name: Restart Pulse
+  systemd:
+    name: pulse
+    state: restarted

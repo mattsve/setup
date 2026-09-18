@@ -29,6 +29,19 @@
   ansible.builtin.shell: /tmp/pulse-install.sh < /dev/null
   when: not pulse_update_helper.stat.exists
 
+# The installed unit has `EnvironmentFile=-/etc/pulse/.env` (the leading
+# "-" makes it optional) specifically as a hook for overrides like this -
+# used instead of a systemd drop-in so it survives install.sh regenerating
+# the unit file itself on a future fresh install.
+- name: Disable Pulse telemetry
+  ansible.builtin.lineinfile:
+    path: /etc/pulse/.env
+    regexp: "^PULSE_TELEMETRY="
+    line: "PULSE_TELEMETRY=false"
+    create: true
+    mode: "0644"
+  notify: Restart Pulse
+
 - name: Enable and start Pulse
   systemd:
     name: pulse
