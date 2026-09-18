@@ -14,6 +14,8 @@ ansible-galaxy collection install -r ansible/requirements.yaml
 
 Requires the 1Password CLI (`op`) signed in — secrets are fetched via `community.general.onepassword` lookups in `group_vars`, not stored in the repo. `ansible/.env` (gitignored) holds `PROXMOX_TOKEN_SECRET`, used via `op run --env-file .env -- ...`.
 
+On macOS with Python 3.14 (Homebrew's current `ansible` formula dependency), every `ansible`/`ansible-playbook` command needs `OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES` set first to avoid `ERROR! A worker was found in a dead state` — see the Troubleshooting section in the repo's `README.md` for the known upstream issue this works around.
+
 ## Commands
 
 All commands run from the `ansible/` directory.
