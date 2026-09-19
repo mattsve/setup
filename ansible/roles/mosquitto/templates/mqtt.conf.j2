@@ -1,5 +1,9 @@
 allow_anonymous {{ mosquitto_allow_anonymous | lower }}
 
+{% if mosquitto_users %}
+password_file {{ mosquitto_passwd_file }}
+{% endif %}
+
 {% if mosquitto_tls_enabled | bool %}
 # Plaintext, for units that don't support TLS.
 listener {{ mosquitto_plain_port }}

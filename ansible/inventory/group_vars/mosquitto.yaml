@@ -1,0 +1,25 @@
+---
+# Users come from a single 1Password item named "mqtt-users" (a Secure Note,
+# so it has no built-in username/password fields of its own to filter out)
+# with one custom password-type field per user - field label is the MQTT
+# username, field value is the password. Adding/removing a user is then just
+# a 1Password edit, no repo change needed.
+#
+# Jinja has no list-comprehension syntax, so the concealed fields are pulled
+# out as parallel label/value lists (map(attribute=...)), zipped back into
+# pairs, and turned into a dict then a list of {username, password} maps via
+# dict2items - the lookup is called twice since there's no way to stash its
+# result in a variable without breaking Ansible's "whole value is one
+# expression" native-type detection (which is what keeps this a real list
+# instead of a stringified one).
+mosquitto_users: >-
+  {{
+    dict(
+      (lookup('community.general.onepassword_raw', 'mqtt-users', vault='agb').fields
+        | selectattr('type', 'equalto', 'CONCEALED') | rejectattr('purpose', 'defined')
+        | map(attribute='label') | list)
+      | zip(lookup('community.general.onepassword_raw', 'mqtt-users', vault='agb').fields
+        | selectattr('type', 'equalto', 'CONCEALED') | rejectattr('purpose', 'defined')
+        | map(attribute='value') | list)
+    ) | dict2items(key_name='username', value_name='password')
+  }}

@@ -36,6 +36,40 @@
   notify: restart mosquitto
   when: mosquitto_tls_enabled | bool
 
+- name: Ensure mosquitto password file exists
+  copy:
+    content: ""
+    dest: "{{ mosquitto_passwd_file }}"
+    force: false
+    owner: mosquitto
+    group: mosquitto
+    mode: 0640
+  when: mosquitto_users | length > 0
+
+- name: Check for existing mosquitto password entries
+  command: "grep -q ^{{ item.username }}: {{ mosquitto_passwd_file }}"
+  register: mosquitto_existing_users
+  loop: "{{ mosquitto_users }}"
+  loop_control:
+    label: "{{ item.username }}"
+  changed_when: false
+  failed_when: false
+  when: mosquitto_users | length > 0
+
+# No community.general module wraps the mosquitto_passwd CLI tool (it ships
+# with the mosquitto package itself), and its own hashing is a randomly
+# salted PBKDF2-SHA512, so re-running it for a user already in the file
+# would always report changed - hence checking for the username above and
+# only calling it for the ones still missing, rather than every run.
+- name: Add missing mosquitto password entries
+  command: "mosquitto_passwd -b {{ mosquitto_passwd_file }} {{ item.item.username }} {{ item.item.password }}"
+  loop: "{{ mosquitto_existing_users.results }}"
+  loop_control:
+    label: "{{ item.item.username }}"
+  no_log: true
+  notify: restart mosquitto
+  when: mosquitto_users | length > 0 and item.rc != 0
+
 - name: Configure mosquitto listeners
   template:
     src: mqtt.conf.j2

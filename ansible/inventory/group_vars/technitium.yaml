@@ -1,2 +1,2 @@
 ---
-technitium_api_token: "{{ lookup('community.general.onepassword', 'op://private/dns/ansible-api-token') }}"
+technitium_api_token: "{{ lookup('community.general.onepassword', 'op://agb/dns/ansible-api-token') }}"

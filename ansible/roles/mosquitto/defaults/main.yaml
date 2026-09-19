@@ -11,7 +11,19 @@ mosquitto_domain: "{{ inventory_hostname }}.hem.ingenstans.se"
 # (mirrors how playbooks target groups instead of a group-plus-flag pair).
 mosquitto_tls_enabled: "{{ 'certbot' in group_names }}"
 mosquitto_tls_port: 8883
+
+# Deliberately a manual flag rather than derived from mosquitto_users: flipping
+# it the moment a user is added would lock out any anonymous client that
+# hasn't been migrated yet. Flip to false by hand once every client in use
+# has been given credentials.
 mosquitto_allow_anonymous: true
+
+# Per-user credentials checked against mosquitto_passwd_file when non-empty.
+# Populate via group_vars/mosquitto.yaml (1Password-backed, same pattern as
+# plex's Samba credentials) - list of {username, password} maps. Empty by
+# default so this stays opt-in.
+mosquitto_users: []
+mosquitto_passwd_file: /etc/mosquitto/passwd
 
 # Plaintext listener alongside the TLS one, for units that don't support TLS.
 mosquitto_plain_port: 1883
