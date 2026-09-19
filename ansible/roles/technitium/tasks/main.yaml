@@ -21,6 +21,48 @@
     state: started
     enabled: true
 
+- name: Create local cert directory for Technitium's PKCS#12 bundle
+  file:
+    path: "{{ technitium_cert_dir }}"
+    state: directory
+    owner: "{{ technitium_service_user }}"
+    group: "{{ technitium_service_user }}"
+    mode: 0750
+  when: technitium_tls_enabled | bool
+
+- name: Convert Let's Encrypt certificate to PKCS#12 for Technitium
+  # No `creates:` guard, same reasoning as certbot's own cert request task -
+  # this is cheap to re-run, and rebuilding it every play keeps it in sync
+  # with whatever certbot's live symlink currently points at rather than
+  # only refreshing on an actual renewal event.
+  command:
+    cmd: >
+      openssl pkcs12 -export
+      -in {{ technitium_letsencrypt_dir }}/fullchain.pem
+      -inkey {{ technitium_letsencrypt_dir }}/privkey.pem
+      -passout pass:{{ technitium_pfx_password }}
+      -name technitium
+      -out {{ technitium_pfx_path }}
+  when: technitium_tls_enabled | bool
+  changed_when: true
+
+- name: Set ownership on Technitium's PKCS#12 bundle
+  file:
+    path: "{{ technitium_pfx_path }}"
+    owner: "{{ technitium_service_user }}"
+    group: "{{ technitium_service_user }}"
+    mode: 0600
+  when: technitium_tls_enabled | bool
+
+- name: Deploy certbot renewal hook to refresh Technitium's PKCS#12 cert
+  template:
+    src: certbot-deploy-hook.sh.j2
+    dest: /etc/letsencrypt/renewal-hooks/deploy/technitium.sh
+    owner: root
+    group: root
+    mode: 0755
+  when: technitium_tls_enabled | bool
+
 - name: Ensure Technitium DNS zones
   effectivelywild.technitium_dns.technitium_dns_zone:
     "{{ {'api_url': technitium_api_url, 'api_token': technitium_api_token, 'state': 'present'} | combine(item) }}"
@@ -34,6 +76,45 @@
   loop: "{{ technitium_records }}"
   loop_control:
     label: "{{ item.name }}"
+
+- name: Configure Technitium web console and encrypted DNS protocols
+  effectivelywild.technitium_dns.technitium_dns_set_server_settings:
+    api_url: "{{ technitium_api_url }}"
+    api_token: "{{ technitium_api_token }}"
+    webServiceEnableTls: true
+    webServiceUseSelfSignedTlsCertificate: false
+    webServiceTlsPort: "{{ technitium_web_service_https_port }}"
+    webServiceTlsCertificatePath: "{{ technitium_pfx_path }}"
+    webServiceTlsCertificatePassword: "{{ technitium_pfx_password }}"
+    enableDnsOverTls: true
+    enableDnsOverHttps: true
+    dnsOverTlsPort: "{{ technitium_dns_over_tls_port }}"
+    dnsOverHttpsPort: "{{ technitium_dns_over_https_port }}"
+    dnsTlsCertificatePath: "{{ technitium_pfx_path }}"
+    dnsTlsCertificatePassword: "{{ technitium_pfx_password }}"
+    dnssecValidation: true
+  when: technitium_tls_enabled | bool
+
+- name: Get current DNSSEC status for zones to sign
+  effectivelywild.technitium_dns.technitium_dns_get_dnssec_properties:
+    api_url: "{{ technitium_api_url }}"
+    api_token: "{{ technitium_api_token }}"
+    zone: "{{ item }}"
+  loop: "{{ technitium_dnssec_zones }}"
+  register: technitium_dnssec_status
+
+- name: Sign DNSSEC zones that aren't already signed
+  effectivelywild.technitium_dns.technitium_dns_sign_zone:
+    api_url: "{{ technitium_api_url }}"
+    api_token: "{{ technitium_api_token }}"
+    zone: "{{ item.item }}"
+    algorithm: "{{ technitium_dnssec_algorithm }}"
+    curve: "{{ technitium_dnssec_curve }}"
+    nxProof: "{{ technitium_dnssec_nx_proof }}"
+  loop: "{{ technitium_dnssec_status.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when: item.dnssec_properties.dnssecStatus == 'Unsigned'
 
 - name: Ensure Technitium DHCP scopes
   effectivelywild.technitium_dns.technitium_dns_set_dhcp_scope:

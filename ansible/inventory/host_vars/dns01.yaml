@@ -1,4 +1,30 @@
 ---
+# dns01's own cert covers both names it's reachable as: the friendly "dns"
+# name (certbot_domains[0], also the lineage name technitium_domain below
+# points at) and its own dns01.server.agb.ingenstans.se record - same
+# generic-service-name-vs-host-name split as caddy/plex (reverse-proxy01 ->
+# caddy, plex01 -> plex) for the first, hardcoded here rather than built
+# from inventory_hostname.
+#
+# Both names validate fine via the same Cloudflare DNS-01 challenge even
+# though only agb.ingenstans.se - not server.agb.ingenstans.se - is a zone
+# Cloudflare actually hosts: dns01.server.agb.ingenstans.se is still a
+# subdomain *of* agb.ingenstans.se, and nothing delegates server.agb.
+# ingenstans.se away from Cloudflare (see its "no NS delegation needed"
+# zone comment below), so Cloudflare remains the public authority for that
+# name too and can place the challenge TXT record under it like any other
+# subdomain. This is the split-horizon property that makes the whole setup
+# work: Cloudflare stays authoritative for the public DNS-01 lookup across
+# all of agb.ingenstans.se, while the same-named Primary zone inside
+# Technitium (technitium_zones below) independently serves different,
+# internal-only answers for specific names - the two are resolved through
+# entirely separate paths (Cloudflare's public nameservers vs. Technitium's
+# API) and never conflict.
+certbot_domains:
+  - dns.agb.ingenstans.se
+  - dns01.server.agb.ingenstans.se
+technitium_domain: dns.agb.ingenstans.se
+
 technitium_zones:
   # hem.ingenstans.se is being retired in favor of agb.ingenstans.se.
   # certbot still issues certs for hem.ingenstans.se for now (that
@@ -27,6 +53,18 @@ technitium_zones:
   - zone: management.agb.ingenstans.se
     type: Primary
 
+# Sign every Primary zone except hem.ingenstans.se, which is being retired
+# (see the zone comment above) - not worth signing a zone on its way out.
+# None of these are delegated to dns01 from a real parent zone (they're all
+# internal-only), so this doesn't build a chain of trust an external
+# resolver could follow - its value here is a validating client on the LAN/
+# VLAN 50 being able to detect a tampered/spoofed answer for these zones,
+# not public verifiability.
+technitium_dnssec_zones:
+  - agb.ingenstans.se
+  - server.agb.ingenstans.se
+  - management.agb.ingenstans.se
+
 # Starter set: the hostnames caddy already reverse-proxies (see
 # host_vars/reverse-proxy01.yaml's caddy_proxies) all need to resolve
 # internally to reverse-proxy01 itself, not wherever public DNS points
@@ -52,6 +90,15 @@ technitium_records:
     zone: agb.ingenstans.se
     type: CNAME
     cname: reverse-proxy01.server.agb.ingenstans.se
+    ttl: 3600
+  # dns01's own friendly name - the cert (certbot_domains above) and the
+  # Technitium web console/DoT/DoH now all identify as this name, so it
+  # needs to actually resolve, same CNAME-into-server.agb pattern as
+  # plex/pve/pulse above.
+  - name: dns.agb.ingenstans.se
+    zone: agb.ingenstans.se
+    type: CNAME
+    cname: dns01.server.agb.ingenstans.se
     ttl: 3600
 
   # dns01 itself is static, not a DHCP lease, so it doesn't get an

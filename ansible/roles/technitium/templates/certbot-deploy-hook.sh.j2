@@ -1,0 +1,17 @@
+#!/bin/sh
+# Certbot runs every script in renewal-hooks/deploy/ after a successful
+# renewal. Technitium takes its cert as a single PKCS#12 bundle rather than
+# separate cert/key files, so this rebuilds that bundle from the renewed
+# PEM output - no service restart needed, Technitium reloads it itself on
+# seeing the file's mtime change.
+set -e
+
+openssl pkcs12 -export \
+	-in "{{ technitium_letsencrypt_dir }}/fullchain.pem" \
+	-inkey "{{ technitium_letsencrypt_dir }}/privkey.pem" \
+	-passout "pass:{{ technitium_pfx_password }}" \
+	-name technitium \
+	-out "{{ technitium_pfx_path }}"
+
+chown {{ technitium_service_user }}:{{ technitium_service_user }} "{{ technitium_pfx_path }}"
+chmod 0600 "{{ technitium_pfx_path }}"

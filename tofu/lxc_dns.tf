@@ -4,7 +4,12 @@ resource "proxmox_virtual_environment_container" "dns" {
   start_on_boot = true
   started       = true
   unprivileged  = true
-  tags          = ["managed-updates", "autologin", "technitium"]
+  # certbot: dns01 now holds its own Let's Encrypt cert (converted to
+  # PKCS#12 for Technitium - see ansible/roles/technitium), so DNS-over-TLS/
+  # HTTPS and its own web console can terminate TLS directly instead of
+  # behind reverse-proxy01's caddy - DoT is raw TLS-wrapped DNS, not HTTP,
+  # so a caddy reverse proxy in front of it couldn't terminate it anyway.
+  tags = ["managed-updates", "autologin", "technitium", "certbot"]
 
   # dns01 is the DHCP server for VLAN 50 (technitium_dhcp_scopes, see
   # ansible/inventory/host_vars/dns01.yaml), so pulse01/reverse-proxy01/
@@ -63,6 +68,11 @@ resource "proxmox_virtual_environment_container" "dns" {
     # the IPv6 addressing note in CLAUDE.md. Resulting address on VLAN 50's
     # ULA (fd01:eae3:bc39:50::/64): fd01:eae3:bc39:50:be24:11ff:fe7d:ccf0
     mac_address = "BC:24:11:7D:CC:F0"
+    # Required for firewall_dns.tf's rules to actually filter this
+    # interface's traffic - without it, Proxmox compiles the guest's
+    # firewall config but never attaches it to net0 (same gotcha noted on
+    # pulse01's network_interface in lxc_pulse.tf).
+    firewall = true
   }
 
   operating_system {
