@@ -12,7 +12,7 @@ Ansible configuration for provisioning and managing home lab servers (Proxmox ho
 ansible-galaxy collection install -r ansible/requirements.yaml
 ```
 
-Requires the 1Password CLI (`op`) signed in — secrets are fetched via `community.general.onepassword` lookups in `group_vars`, not stored in the repo. `ansible/.env` (gitignored) holds `PROXMOX_TOKEN_SECRET`, used via `op run --env-file .env -- ...`.
+Requires the 1Password CLI (`op`) signed in — secrets are fetched via `community.general.onepassword` lookups in `group_vars`, not stored in the repo. `ansible/.env` holds `PROXMOX_TOKEN_SECRET=op://agb/Proxmox/ansible-api-token`, used via `op run --env-file .env -- ...`. It's checked in rather than gitignored: it only ever holds an `op://` reference, never a resolved secret, so there's nothing sensitive to keep out of the repo, and having it present on a fresh clone means a new machine just needs `op` signed in to run anything - no manual `.env` recreation step.
 
 On macOS with Python 3.14 (Homebrew's current `ansible` formula dependency), every `ansible`/`ansible-playbook` command needs `OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES` set first to avoid `ERROR! A worker was found in a dead state` — see the Troubleshooting section in the repo's `README.md` for the known upstream issue this works around.
 
@@ -96,7 +96,7 @@ op run --env-file .env -- tofu plan
 op run --env-file .env -- tofu apply
 ```
 
-`tofu/.env` (gitignored) holds `TF_VAR_proxmox_token_secret=op://agb/Proxmox/opentofu-api-token` (a field on the same `Proxmox` 1Password item Ansible's secrets live on, alongside `ansible-api-token`). `provider.tf` builds the full `api_token` string (`user!tokenid=secret`) from that var; only the secret half is out of tree.
+`tofu/.env` holds `TF_VAR_proxmox_token_secret=op://agb/Proxmox/opentofu-api-token` (a field on the same `Proxmox` 1Password item Ansible's secrets live on, alongside `ansible-api-token`) - checked in for the same reason as `ansible/.env` above, since it's just an `op://` reference. `provider.tf` builds the full `api_token` string (`user!tokenid=secret`) from that var; only the secret half (resolved by `op run` at runtime, never written to disk) is out of tree.
 
 The `opentofu` token needs more than the `PVEAdmin` role: any resource that downloads by URL (e.g. `proxmox_download_file`, used for CT templates) calls Proxmox's `query-url-metadata` endpoint, which requires `Sys.AccessNetwork` — not covered by `PVEAdmin` or any built-in role short of full `Administrator`. Granted narrowly instead: a custom `AccessNetwork` role (just `Sys.AccessNetwork`) assigned to the token on `/nodes` (propagated, so it covers `pve1` and any future node) rather than handing out `Administrator` on `/`.
 
