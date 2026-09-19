@@ -50,22 +50,30 @@ resource "proxmox_virtual_environment_firewall_rules" "dns" {
     comment = "DNS (TCP fallback) from the LAN and VLAN 50"
   }
 
-  # DHCP relay: OPNsense relays VLAN 50 client requests to dns01 as unicast
-  # UDP from its own VLAN 50 interface address, not the requesting client's
-  # (RFC 1542). Widened from a 10.1.50.1-only source to accept from
-  # anywhere after mqtt01 couldn't get a lease post-VLAN-50-move with the
-  # narrow rule in place - an iptables counter check
-  # (veth106i0-IN, dpt:67) showed packets matching that narrower rule too,
-  # so the exact mechanism isn't fully understood, but removing the source
-  # restriction is what got mqtt01 a lease. Left open deliberately for now
-  # rather than re-narrowed/re-tested; revisit narrowing it back to
-  # 10.1.50.1 if this gets investigated further.
+  # Plain DHCP, not relayed: dns01 sits directly on VLAN 50 (10.1.50.0/24),
+  # the same subnet as every client it serves, so there's no L3 hop for a
+  # relay to bridge - clients' broadcast DHCPDISCOVERs already reach it
+  # directly over L2. OPNsense previously also had DHCP relay/IP Helper
+  # enabled for VLAN 50 pointed at dns01 on top of that, which is where
+  # mqtt01's "no DHCPOFFERS received" actually came from: relayed requests
+  # carry a non-zero giaddr, which tells the server to reply to the relay
+  # agent rather than the client directly, and that same-subnet relay
+  # return leg was the broken part - not this firewall rule, which a
+  # counter check had already shown accepting the relayed copies fine.
+  # Widening the rule to any source earlier "fixed" mqtt01 only because it
+  # incidentally let mqtt01's own direct broadcast (source 0.0.0.0) through
+  # too, which the strict 10.1.50.1-only rule had been silently dropping
+  # the whole time. Now that the relay is off on OPNsense, narrowed back to
+  # the actual source shape direct DHCP traffic has: client broadcasts from
+  # 0.0.0.0, and unicast renewals from a client's own leased VLAN 50
+  # address - both covered by the whole subnet rather than a single peer.
   rule {
     type    = "in"
     action  = "ACCEPT"
     proto   = "udp"
     dport   = "67"
-    comment = "DHCP relay (IP Helper) - open to any source, see comment above"
+    source  = "0.0.0.0,10.1.50.0/24"
+    comment = "DHCP (direct, not relayed) from VLAN 50 clients"
   }
 
   # DNS-over-TLS (ansible/roles/technitium's enableDnsOverTls) and DNS-over-
