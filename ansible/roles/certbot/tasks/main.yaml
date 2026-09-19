@@ -31,6 +31,7 @@
       certbot certonly
       --dns-cloudflare
       --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini
+      --dns-cloudflare-propagation-seconds {{ certbot_dns_cloudflare_propagation_seconds }}
       --non-interactive
       --agree-tos
       --expand

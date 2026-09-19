@@ -100,6 +100,14 @@ technitium_records:
     type: CNAME
     cname: dns01.server.agb.ingenstans.se
     ttl: 3600
+  # Added ahead of mqtt01's VLAN 50 move (not live yet - see
+  # host_vars/mqtt01.yaml's matching certbot_domains addition), same
+  # CNAME-into-server.agb pattern as plex/pve/pulse/dns above.
+  - name: mqtt.agb.ingenstans.se
+    zone: agb.ingenstans.se
+    type: CNAME
+    cname: mqtt01.server.agb.ingenstans.se
+    ttl: 3600
 
   # dns01 itself is static, not a DHCP lease, so it doesn't get an
   # auto-registered record from the server scope's dnsUpdates - added by
@@ -134,6 +142,18 @@ technitium_records:
     zone: server.agb.ingenstans.se
     type: AAAA
     ipAddress: fd01:eae3:bc39:50:be24:11ff:fe82:633b
+    ttl: 3600
+
+  # mqtt01 hasn't moved to VLAN 50 yet (tofu/lxc_mqtt.tf is still LAN/static)
+  # - this is prep for that move, same EUI-64 interface ID as its current
+  # LAN ULA (fd01:eae3:bc39:100:be24:11ff:fe42:31c4, CLAUDE.md) carried over
+  # onto VLAN 50's prefix. No A record yet: that comes from DHCP lease
+  # auto-registration once the move actually happens, same as plex01's
+  # above.
+  - name: mqtt01.server.agb.ingenstans.se
+    zone: server.agb.ingenstans.se
+    type: AAAA
+    ipAddress: fd01:eae3:bc39:50:be24:11ff:fe42:31c4
     ttl: 3600
 
   - name: pve01.management.agb.ingenstans.se

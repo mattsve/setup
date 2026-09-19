@@ -52,15 +52,20 @@ resource "proxmox_virtual_environment_firewall_rules" "dns" {
 
   # DHCP relay: OPNsense relays VLAN 50 client requests to dns01 as unicast
   # UDP from its own VLAN 50 interface address, not the requesting client's
-  # (RFC 1542) - a single known peer, so narrowed to that one address
-  # rather than the whole subnet.
+  # (RFC 1542). Widened from a 10.1.50.1-only source to accept from
+  # anywhere after mqtt01 couldn't get a lease post-VLAN-50-move with the
+  # narrow rule in place - an iptables counter check
+  # (veth106i0-IN, dpt:67) showed packets matching that narrower rule too,
+  # so the exact mechanism isn't fully understood, but removing the source
+  # restriction is what got mqtt01 a lease. Left open deliberately for now
+  # rather than re-narrowed/re-tested; revisit narrowing it back to
+  # 10.1.50.1 if this gets investigated further.
   rule {
     type    = "in"
     action  = "ACCEPT"
     proto   = "udp"
     dport   = "67"
-    source  = "10.1.50.1"
-    comment = "DHCP relay (IP Helper) from OPNsense's VLAN 50 interface"
+    comment = "DHCP relay (IP Helper) - open to any source, see comment above"
   }
 
   # DNS-over-TLS (ansible/roles/technitium's enableDnsOverTls) and DNS-over-
