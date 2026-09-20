@@ -14,9 +14,9 @@ mosquitto_tls_port: 8883
 
 # Deliberately a manual flag rather than derived from mosquitto_users: flipping
 # it the moment a user is added would lock out any anonymous client that
-# hasn't been migrated yet. Flip to false by hand once every client in use
-# has been given credentials.
-mosquitto_allow_anonymous: true
+# hasn't been migrated yet. Now false - every client in use has been given
+# credentials.
+mosquitto_allow_anonymous: false
 
 # Per-user credentials checked against mosquitto_passwd_file when non-empty.
 # Populate via group_vars/mosquitto.yaml (1Password-backed, same pattern as
