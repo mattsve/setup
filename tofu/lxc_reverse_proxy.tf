@@ -49,7 +49,7 @@ resource "proxmox_virtual_environment_container" "reverse_proxy" {
     bridge  = "vmbr0"
     vlan_id = 50
     # Pinned so SLAAC's EUI-64 derivation stays stable across rebuilds (see
-    # CLAUDE.md's IPv6 addressing section). ULA: fd01:eae3:bc39:50:be24:11ff:fecb:eab5
+    # CLAUDE.md's IPv6 addressing section). ULA: fd01:eae3:bc39:32:be24:11ff:fecb:eab5
     mac_address = "BC:24:11:CB:EA:B5"
   }
 

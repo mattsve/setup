@@ -63,7 +63,7 @@ resource "proxmox_virtual_environment_vm" "plex" {
     bridge  = "vmbr0"
     vlan_id = 50
     # Pinned so SLAAC's EUI-64 derivation stays stable across rebuilds (see
-    # CLAUDE.md's IPv6 addressing section). ULA: fd01:eae3:bc39:50:be24:11ff:fe82:633b
+    # CLAUDE.md's IPv6 addressing section). ULA: fd01:eae3:bc39:32:be24:11ff:fe82:633b
     mac_address = "BC:24:11:82:63:3B"
   }
 

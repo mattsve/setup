@@ -63,7 +63,7 @@ resource "proxmox_virtual_environment_container" "mqtt" {
     firewall     = false
     host_managed = false
     # Pinned so SLAAC's EUI-64 derivation stays stable across rebuilds (see
-    # CLAUDE.md's IPv6 addressing section). ULA: fd01:eae3:bc39:50:be24:11ff:fe42:31c4
+    # CLAUDE.md's IPv6 addressing section). ULA: fd01:eae3:bc39:32:be24:11ff:fe42:31c4
     mac_address = "BC:24:11:42:31:C4"
     mtu         = 0
     name        = "eth0"

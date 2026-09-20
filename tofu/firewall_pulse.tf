@@ -28,7 +28,7 @@ resource "proxmox_virtual_environment_firewall_rules" "pulse" {
     dport  = "7655"
     # reverse-proxy01's stable VLAN 50 ULA - the address its caddy_proxies
     # pulse backend connects from (host_vars/reverse-proxy01.yaml).
-    source  = "fd01:eae3:bc39:50:be24:11ff:fecb:eab5"
+    source  = "fd01:eae3:bc39:32:be24:11ff:fecb:eab5"
     comment = "reverse-proxy01 only"
   }
 }

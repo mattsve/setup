@@ -54,7 +54,7 @@ resource "proxmox_virtual_environment_container" "pulse" {
     bridge  = "vmbr0"
     vlan_id = 50
     # Pinned so SLAAC's EUI-64 derivation stays stable across rebuilds (see
-    # CLAUDE.md's IPv6 addressing section). ULA: fd01:eae3:bc39:50:be24:11ff:fef7:4b74
+    # CLAUDE.md's IPv6 addressing section). ULA: fd01:eae3:bc39:32:be24:11ff:fef7:4b74
     mac_address = "BC:24:11:F7:4B:74"
     # Required for firewall_pulse.tf's rules to actually filter this
     # interface - without it Proxmox compiles the firewall config but never

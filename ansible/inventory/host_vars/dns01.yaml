@@ -69,7 +69,7 @@ technitium_records:
   - name: dns01.server.agb.ingenstans.se
     zone: server.agb.ingenstans.se
     type: AAAA
-    ipAddress: fd01:eae3:bc39:50:be24:11ff:fe7d:ccf0
+    ipAddress: fd01:eae3:bc39:32:be24:11ff:fe7d:ccf0
     ttl: 3600
 
   # AAAA records are added by hand for every host below: dnsUpdates only
@@ -78,17 +78,17 @@ technitium_records:
   - name: reverse-proxy01.server.agb.ingenstans.se
     zone: server.agb.ingenstans.se
     type: AAAA
-    ipAddress: fd01:eae3:bc39:50:be24:11ff:fecb:eab5
+    ipAddress: fd01:eae3:bc39:32:be24:11ff:fecb:eab5
     ttl: 3600
   - name: plex01.server.agb.ingenstans.se
     zone: server.agb.ingenstans.se
     type: AAAA
-    ipAddress: fd01:eae3:bc39:50:be24:11ff:fe82:633b
+    ipAddress: fd01:eae3:bc39:32:be24:11ff:fe82:633b
     ttl: 3600
   - name: mqtt01.server.agb.ingenstans.se
     zone: server.agb.ingenstans.se
     type: AAAA
-    ipAddress: fd01:eae3:bc39:50:be24:11ff:fe42:31c4
+    ipAddress: fd01:eae3:bc39:32:be24:11ff:fe42:31c4
     ttl: 3600
 
   - name: pve01.management.agb.ingenstans.se
