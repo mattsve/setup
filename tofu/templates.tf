@@ -20,14 +20,11 @@ resource "proxmox_download_file" "debian_13_genericcloud" {
   checksum_algorithm = "sha512"
 }
 
-# The debian_13_genericcloud image does not ship qemu-guest-agent, but every
-# VM built from it sets agent.enabled = true, so Tofu blocks on the agent
-# checking in after first boot until this is installed. Cloud-init vendor
-# data (merged alongside the user_account/ip_config-derived user data,
-# rather than replacing it) installs and starts it on first boot.
+# debian_13_genericcloud doesn't ship qemu-guest-agent, but every VM built
+# from it sets agent.enabled = true, so Tofu blocks on the agent checking
+# in until this installs it via cloud-init vendor data on first boot.
 # Requires the "storage" datastore to have the "snippets" content type
-# enabled (Datacenter -> Storage -> storage -> Edit -> Content, or
-# `pvesm set storage --content backup,import,iso,vztmpl,snippets` on pve1).
+# enabled (`pvesm set storage --content backup,import,iso,vztmpl,snippets`).
 resource "proxmox_virtual_environment_file" "vm_vendor_data" {
   content_type = "snippets"
   datastore_id = "storage"

@@ -1,105 +1,72 @@
 ---
 technitium_install_script_url: "https://download.technitium.com/dns/install.sh"
 
-# Tasks run on dns01 itself (pct exec), so the API is reachable on localhost
-# regardless of the guest's LAN address. No port here - the collection's
-# modules append their own api_port (default 5380) to this URL, so
-# including it here would double it up into "localhost:5380:5380".
+# Tasks run on dns01 itself (pct exec), so this is reachable on localhost
+# regardless of the guest's LAN address. No port - the collection's modules
+# append their own api_port (default 5380) to this URL.
 technitium_api_url: "http://localhost"
 
-# API token for Technitium's REST API. Actual value supplied via
-# group_vars/technitium.yaml (see certbot_cloudflare_api_token for the same
-# pattern). Generate it once via the web console (Administration > Sessions
-# > Create Token) - Ansible doesn't create this token itself, matching how
-# every other secret in this repo is a pre-existing value fetched via
-# 1Password, not something a role generates.
+# Generate via the web console (Administration > Sessions > Create Token) -
+# Ansible doesn't create this token itself. Actual value supplied via
+# group_vars/technitium.yaml.
 technitium_api_token: ""
 
-# Zones to ensure exist, e.g.:
+# Supplied per host in host_vars/dns01.yaml, e.g.:
 #   - zone: hem.ingenstans.se
 #     type: Primary
-# Supplied per host in host_vars/dns01.yaml.
 technitium_zones: []
 
-# Records to ensure exist, e.g.:
+# Supplied per host in host_vars/dns01.yaml, e.g.:
 #   - name: plex.hem.ingenstans.se
 #     zone: hem.ingenstans.se
 #     type: A
 #     ipAddress: 10.0.2.5
-# Supplied per host in host_vars/dns01.yaml.
 technitium_records: []
 
-# TLS: dns01 is tagged certbot (tofu/lxc_dns.tf) so it holds its own
-# Let's Encrypt cert, consumed directly by Technitium rather than
-# reverse-proxied - DNS-over-TLS is raw TLS-wrapped DNS, not HTTP, so a
-# caddy reverse proxy in front of it (the pattern every other web UI here
-# uses) couldn't terminate it anyway. The web console piggybacks on the
-# same cert once Technitium already needs one for that, rather than
-# splitting TLS termination for the console onto caddy and DNS protocols
-# onto Technitium itself. Derived from certbot group membership, same
-# pattern as mosquitto_tls_enabled.
+# dns01 is tagged certbot (tofu/lxc_dns.tf) and holds its own cert rather
+# than being reverse-proxied - DNS-over-TLS is raw TLS-wrapped DNS, not
+# HTTP, so a caddy proxy in front of it couldn't terminate it anyway.
 technitium_tls_enabled: "{{ 'certbot' in group_names }}"
 
-# Domain the TLS cert was issued for - same default pattern as
-# mosquitto_domain/caddy_domain, so this lines up with the cert the
-# certbot role already requested for this host.
 technitium_domain: "{{ inventory_hostname }}.hem.ingenstans.se"
 technitium_letsencrypt_dir: "/etc/letsencrypt/live/{{ technitium_domain }}"
 
-# Technitium requires its certificate in PKCS#12 (.pfx) form - a single
-# bundled file, unlike the separate fullchain.pem/privkey.pem copies
-# mosquitto/caddy consume - so certbot's PEM output is converted by an
-# openssl command (tasks/main.yaml) rather than copied as-is. Technitium
-# watches this file's mtime and reloads it automatically, so - unlike
-# mosquitto's renewal hook, which restarts the service - the renewal hook
-# here only needs to refresh the file; nothing needs restarting for a
-# renewal to take effect, and the server-settings API call further below
-# only needs to run once (it just points Technitium at this path).
+# Technitium requires the cert as a single PKCS#12 bundle rather than
+# separate fullchain.pem/privkey.pem files, so it's converted from
+# certbot's PEM output (tasks/main.yaml). Technitium watches the file's
+# mtime and reloads it itself, so the renewal hook only refreshes the file -
+# nothing needs restarting.
 technitium_cert_dir: /etc/dns/certs
 technitium_pfx_path: "{{ technitium_cert_dir }}/technitium.pfx"
 # PKCS#12 requires *a* password syntactically, but this file is only ever
-# read by Technitium's own service user (dns-server) off a 0600 path - the
-# filesystem permissions are what actually protect it, the same as
-# mosquitto/caddy's unencrypted private key copies, so there's no real
-# secret here worth pulling from 1Password.
+# read by Technitium's own service user off a 0600 path, so filesystem
+# permissions are what actually protect it.
 technitium_pfx_password: ""
 
-# Technitium's own service user (set up by its install script) - owns the
-# PKCS#12 bundle above so the running dns.service can actually read it.
+# Owns the PKCS#12 bundle above so dns.service can read it.
 technitium_service_user: dns-server
 
-# Ports for the web console over HTTPS and the optional encrypted DNS
-# protocols enabled below. Set explicitly (rather than left at Technitium's
-# built-in defaults) so they're documented here alongside the firewall
-# rules that have to admit them (tofu/firewall_dns.tf).
+# Set explicitly (rather than left at Technitium's built-in defaults) so
+# they're documented here alongside tofu/firewall_dns.tf's rules.
 technitium_web_service_https_port: 53443
 technitium_dns_over_tls_port: 853
 technitium_dns_over_https_port: 443
 
-# DNSSEC: zones to ensure are signed, e.g. ["agb.ingenstans.se"]. Only
-# Primary zones can be signed. Supplied per host in host_vars/dns01.yaml.
-# technitium_dns_sign_zone "will not update DNSSEC properties once
-# initially signed" and errors if called on an already-signed zone, so
-# tasks/main.yaml checks each zone's current status first and only signs
-# the ones still Unsigned.
+# Supplied per host in host_vars/dns01.yaml, e.g. ["agb.ingenstans.se"].
+# Only Primary zones can be signed. technitium_dns_sign_zone errors if
+# called on an already-signed zone, so tasks/main.yaml checks each zone's
+# status first and only signs the ones still Unsigned.
 technitium_dnssec_zones: []
 technitium_dnssec_algorithm: ECDSA
 technitium_dnssec_curve: P256
 technitium_dnssec_nx_proof: NSEC3
 
-# DHCP scopes to ensure exist, one per VLAN, e.g.:
+# One scope per VLAN, supplied per host in host_vars/dns01.yaml, e.g.:
 #   - name: iot
 #     startingAddress: 10.0.20.10
 #     endingAddress: 10.0.20.250
 #     subnetMask: 255.255.255.0
 #     routerAddress: 10.0.20.1
-# Supplied per host in host_vars/dns01.yaml. dns01 stays single-homed on
-# its own VLAN; Technitium matches each relayed request to a scope by
-# subnet, so serving another VLAN needs no per-scope relay config here -
-# only DHCP relay (IP Helper) configured on OPNsense's interface for that
-# VLAN, pointing at dns01's address, plus OPNsense's own DHCP server for
-# that VLAN turned off. Both of those are done by hand on OPNsense, same
-# as the DNS/ULA config documented in CLAUDE.md - this repo doesn't manage
-# OPNsense. New scopes are created disabled by Technitium's API, so this
-# role explicitly enables each one after setting it up.
+# New scopes are created disabled by Technitium's API, so this role
+# explicitly enables each one after setting it up.
 technitium_dhcp_scopes: []

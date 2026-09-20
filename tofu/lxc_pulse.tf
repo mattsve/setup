@@ -35,9 +35,8 @@ resource "proxmox_virtual_environment_container" "pulse" {
     hostname = "pulse01"
     ip_config {
       ipv4 {
-        # DHCP, not static - see technitium_dhcp_scopes' server scope
-        # (ansible/inventory/host_vars/dns01.yaml): dnsUpdates registers
-        # this lease as pulse01.server.agb.ingenstans.se automatically.
+        # DHCP - dnsUpdates registers this lease as
+        # pulse01.server.agb.ingenstans.se automatically (host_vars/dns01.yaml).
         address = "dhcp"
       }
     }
@@ -54,13 +53,12 @@ resource "proxmox_virtual_environment_container" "pulse" {
     name    = "eth0"
     bridge  = "vmbr0"
     vlan_id = 50
-    # Pinned so SLAAC's EUI-64 derivation stays stable across rebuilds - see
-    # the IPv6 addressing note in CLAUDE.md. Resulting address on VLAN 50's
-    # ULA (fd01:eae3:bc39:50::/64): fd01:eae3:bc39:50:be24:11ff:fef7:4b74
+    # Pinned so SLAAC's EUI-64 derivation stays stable across rebuilds (see
+    # CLAUDE.md's IPv6 addressing section). ULA: fd01:eae3:bc39:50:be24:11ff:fef7:4b74
     mac_address = "BC:24:11:F7:4B:74"
     # Required for firewall_pulse.tf's rules to actually filter this
-    # interface's traffic - without it, Proxmox compiles the guest's
-    # firewall config but never attaches it to net0.
+    # interface - without it Proxmox compiles the firewall config but never
+    # attaches it to net0.
     firewall = true
   }
 

@@ -1,27 +1,20 @@
 ---
-# Mosquitto MQTT broker defaults
-
-# Domain the TLS cert was issued for - same default pattern as certbot_domains,
-# so this lines up with the cert the certbot role already requested for this host.
+# Domain the TLS cert was issued for - lines up with the cert the certbot
+# role already requested for this host.
 mosquitto_domain: "{{ inventory_hostname }}.hem.ingenstans.se"
 
-# TLS listener, no client authentication. Only makes sense if certbot has
-# actually issued a cert for this host - derived from certbot group
-# membership rather than a separate flag, so there's one source of truth
-# (mirrors how playbooks target groups instead of a group-plus-flag pair).
+# Only makes sense if certbot issued a cert for this host - derived from
+# group membership rather than a separate flag.
 mosquitto_tls_enabled: "{{ 'certbot' in group_names }}"
 mosquitto_tls_port: 8883
 
-# Deliberately a manual flag rather than derived from mosquitto_users: flipping
-# it the moment a user is added would lock out any anonymous client that
-# hasn't been migrated yet. Now false - every client in use has been given
-# credentials.
+# Manual flag, not derived from mosquitto_users: flipping it the moment a
+# user is added would lock out any anonymous client not yet migrated. Now
+# false - every client in use has credentials.
 mosquitto_allow_anonymous: false
 
-# Per-user credentials checked against mosquitto_passwd_file when non-empty.
-# Populate via group_vars/mosquitto.yaml (1Password-backed, same pattern as
-# plex's Samba credentials) - list of {username, password} maps. Empty by
-# default so this stays opt-in.
+# Populate via group_vars/mosquitto.yaml (1Password-backed) - list of
+# {username, password} maps. Empty by default so this stays opt-in.
 mosquitto_users: []
 mosquitto_passwd_file: /etc/mosquitto/passwd
 

@@ -14,16 +14,10 @@ certbot_domains:
 # group_vars/certbot.yaml.
 certbot_cloudflare_api_token: ""
 
-# certbot's own --dns-cloudflare-propagation-seconds default (10s) is too
-# short often enough to cause validation failures - a UniFi device's own
-# ACME client waits 20s against the same Cloudflare zones, which set the
-# floor here. Bumped past that to 30s after a real failure on mqtt01's
-# request (5 -d names, one straggler): Cloudflare's global anycast edge
-# doesn't converge on a freshly-created record atomically across every
-# name in a multi-domain request, and if Let's Encrypt's validator queries
-# a PoP that hasn't caught up yet it gets an authoritative NXDOMAIN, which
-# can then be held in that resolver's negative cache for the zone's SOA
-# minimum (1800s here) - a plain retry that lands on a different vantage
-# point can succeed immediately, but the fix that actually reduces how
-# often this race happens at all is more margin before validation starts.
+# certbot's own default (10s) is too short often enough to cause validation
+# failures - Cloudflare's anycast edge doesn't always converge on a
+# freshly-created record across every PoP that fast, and a validator query
+# that lands on a stale one gets an NXDOMAIN that's then negative-cached
+# for the zone's SOA minimum. Bumped to 30s (a real multi-domain request on
+# mqtt01 hit this) to reduce how often the race happens at all.
 certbot_dns_cloudflare_propagation_seconds: 30

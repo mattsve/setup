@@ -46,11 +46,9 @@ resource "proxmox_virtual_environment_vm" "plex" {
 
     ip_config {
       ipv4 {
-        # DHCP, not static - no chicken-and-egg constraint here like dns01's,
-        # so this follows pulse01/reverse-proxy01's pattern instead. Lease
-        # auto-registers as plex01.server.agb.ingenstans.se (see
-        # technitium_dhcp_scopes' dnsUpdates,
-        # ansible/inventory/host_vars/dns01.yaml).
+        # DHCP, not static like dns01 - no chicken-and-egg constraint here.
+        # Lease auto-registers as plex01.server.agb.ingenstans.se
+        # (technitium_dhcp_scopes' dnsUpdates, host_vars/dns01.yaml).
         address = "dhcp"
       }
     }
@@ -64,9 +62,8 @@ resource "proxmox_virtual_environment_vm" "plex" {
   network_device {
     bridge  = "vmbr0"
     vlan_id = 50
-    # Pinned so SLAAC's EUI-64 derivation stays stable across rebuilds - see
-    # the IPv6 addressing note in CLAUDE.md. Resulting address on VLAN 50's
-    # ULA (fd01:eae3:bc39:50::/64): fd01:eae3:bc39:50:be24:11ff:fe82:633b
+    # Pinned so SLAAC's EUI-64 derivation stays stable across rebuilds (see
+    # CLAUDE.md's IPv6 addressing section). ULA: fd01:eae3:bc39:50:be24:11ff:fe82:633b
     mac_address = "BC:24:11:82:63:3B"
   }
 

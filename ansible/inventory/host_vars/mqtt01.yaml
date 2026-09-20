@@ -3,14 +3,9 @@ certbot_domains:
   - "mqtt.hem.ingenstans.se"
   - "{{ inventory_hostname }}.hem.ingenstans.se"
   - "mqtt.k3s.ingenstans.se"
-  # Added ahead of mqtt01's VLAN 50 move (not live yet - see
-  # host_vars/dns01.yaml's matching CNAME/AAAA records) so the cert already
-  # covers both names it'll be reachable as once it lands there, same
-  # friendly-name/host-name pair as the hem.ingenstans.se ones above.
   - "mqtt.agb.ingenstans.se"
   - "{{ inventory_hostname }}.server.agb.ingenstans.se"
 
-# mosquitto's default (`{{ inventory_hostname }}.hem.ingenstans.se`) would
-# now resolve to mqtt01.hem.ingenstans.se, but the live cert directory is
-# named after certbot_domains[0] above (mqtt.hem.ingenstans.se).
+# The live cert directory is named after certbot_domains[0] above
+# (mqtt.hem.ingenstans.se), not mosquitto's inventory_hostname-based default.
 mosquitto_domain: "mqtt.hem.ingenstans.se"

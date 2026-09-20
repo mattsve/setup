@@ -1,11 +1,7 @@
 ---
-# The proxy fronts an arbitrary/growing set of vhosts under hem.ingenstans.se
-# and, now that agb.ingenstans.se's internal zone is live (host_vars/dns01.yaml),
-# agb.ingenstans.se too - both wildcards on one cert so adding a new
-# caddy_proxies entry below never requires touching the cert. Keeping the
-# hem.ingenstans.se pair rather than dropping them is the "transition
-# period" support called out in dns01.yaml's zone comments - not removed
-# until hem.ingenstans.se is actually retired.
+# Wildcards for both domains on one cert, so a new caddy_proxies entry
+# below never requires touching the cert. hem.ingenstans.se stays until
+# it's fully retired in favor of agb.ingenstans.se (host_vars/dns01.yaml).
 certbot_domains:
   - "hem.ingenstans.se"
   - "*.hem.ingenstans.se"

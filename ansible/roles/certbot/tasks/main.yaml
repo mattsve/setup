@@ -15,17 +15,12 @@
     mode: 0600
 
 - name: Request certificate via Cloudflare DNS-01 challenge
-  # No `creates:` guard - a lineage already existing at
-  # /etc/letsencrypt/live/{{ certbot_domains[0] }} doesn't mean it covers
-  # today's certbot_domains (e.g. reverse-proxy01's cert, expanded from just
-  # hem.ingenstans.se to also cover agb.ingenstans.se). --cert-name pins the
-  # lineage certbot targets to the same path caddy_letsencrypt_dir/creates
-  # used to assume; --expand lets it add newly-added domains to that
-  # lineage instead of erroring non-interactively on a domain-set mismatch.
-  # certbot's own renewal logic is what makes this idempotent - it only
-  # actually reissues when the domain set changed or the cert is due, and
-  # deploy hooks (mosquitto/caddy) only fire on an actual reissuance - so
-  # running this unconditionally is safe.
+  # No `creates:` guard - an existing lineage doesn't mean it covers today's
+  # certbot_domains. --cert-name pins the lineage targeted; --expand lets it
+  # add newly-added domains instead of erroring on a domain-set mismatch.
+  # certbot's own renewal logic makes this idempotent (only reissues when
+  # the domain set changed or the cert is due), and deploy hooks only fire
+  # on an actual reissuance - so running this unconditionally is safe.
   command:
     cmd: >
       certbot certonly

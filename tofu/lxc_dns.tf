@@ -4,19 +4,16 @@ resource "proxmox_virtual_environment_container" "dns" {
   start_on_boot = true
   started       = true
   unprivileged  = true
-  # certbot: dns01 now holds its own Let's Encrypt cert (converted to
-  # PKCS#12 for Technitium - see ansible/roles/technitium), so DNS-over-TLS/
-  # HTTPS and its own web console can terminate TLS directly instead of
-  # behind reverse-proxy01's caddy - DoT is raw TLS-wrapped DNS, not HTTP,
-  # so a caddy reverse proxy in front of it couldn't terminate it anyway.
+  # certbot: dns01 holds its own cert (converted to PKCS#12 for Technitium)
+  # so it can terminate DNS-over-TLS/HTTPS and its web console directly
+  # rather than behind reverse-proxy01's caddy - DoT is raw TLS-wrapped DNS,
+  # not HTTP, so a proxy in front couldn't terminate it anyway.
   tags = ["managed-updates", "autologin", "technitium", "certbot"]
 
-  # dns01 is the DHCP server for VLAN 50 (technitium_dhcp_scopes, see
-  # ansible/inventory/host_vars/dns01.yaml), so pulse01/reverse-proxy01/
-  # plex01 - all DHCP-addressed there - can't get a lease until it's up.
-  # order=1 (lower starts first) plus up_delay holds pve-guests.service off
-  # starting order=2 guests for 30s, giving dns.service and the DHCP scope
-  # time to actually be listening rather than racing the next tier.
+  # dns01 is the DHCP server for VLAN 50, so other VLAN 50 guests can't get
+  # a lease until it's up. order=1 plus up_delay holds order=2 guests back
+  # 30s, giving dns.service and the DHCP scope time to actually be
+  # listening rather than racing them.
   startup {
     order    = 1
     up_delay = 30
@@ -45,11 +42,10 @@ resource "proxmox_virtual_environment_container" "dns" {
         gateway = "10.1.50.1"
       }
     }
-    # Overrides the datacenter-wide default nameserver (10.0.0.1, OPNsense's
-    # LAN address). AdGuard Home replies to queries from its VLAN-50-facing
-    # address (10.1.50.1), not the address queried, so a client asking
-    # 10.0.0.1 gets a reply from a different source address and silently
-    # drops it as a mismatch.
+    # Overrides the datacenter-wide default nameserver (10.0.0.1). AdGuard
+    # Home replies from its VLAN-50-facing address (10.1.50.1) instead of
+    # the address queried, so a client asking 10.0.0.1 silently drops the
+    # reply as a source mismatch.
     dns {
       servers = ["10.1.50.1"]
     }
@@ -64,14 +60,12 @@ resource "proxmox_virtual_environment_container" "dns" {
     name    = "eth0"
     bridge  = "vmbr0"
     vlan_id = 50
-    # Pinned so SLAAC's EUI-64 derivation stays stable across rebuilds - see
-    # the IPv6 addressing note in CLAUDE.md. Resulting address on VLAN 50's
-    # ULA (fd01:eae3:bc39:50::/64): fd01:eae3:bc39:50:be24:11ff:fe7d:ccf0
+    # Pinned so SLAAC's EUI-64 derivation stays stable across rebuilds (see
+    # CLAUDE.md's IPv6 addressing section). ULA: fd01:eae3:bc39:50:be24:11ff:fe7d:ccf0
     mac_address = "BC:24:11:7D:CC:F0"
     # Required for firewall_dns.tf's rules to actually filter this
-    # interface's traffic - without it, Proxmox compiles the guest's
-    # firewall config but never attaches it to net0 (same gotcha noted on
-    # pulse01's network_interface in lxc_pulse.tf).
+    # interface - without it Proxmox compiles the firewall config but never
+    # attaches it to net0.
     firewall = true
   }
 

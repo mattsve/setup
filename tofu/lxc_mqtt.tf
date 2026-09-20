@@ -45,11 +45,8 @@ resource "proxmox_virtual_environment_container" "mqtt" {
     hostname = "mqtt01"
     ip_config {
       ipv4 {
-        # DHCP, not static - no chicken-and-egg constraint here like dns01's,
-        # so this follows pulse01/reverse-proxy01/plex01's pattern instead.
-        # Lease auto-registers as mqtt01.server.agb.ingenstans.se (see
-        # technitium_dhcp_scopes' dnsUpdates,
-        # ansible/inventory/host_vars/dns01.yaml).
+        # DHCP - dnsUpdates registers this lease as
+        # mqtt01.server.agb.ingenstans.se automatically (host_vars/dns01.yaml).
         address = "dhcp"
       }
     }
@@ -65,9 +62,8 @@ resource "proxmox_virtual_environment_container" "mqtt" {
     enabled      = true
     firewall     = false
     host_managed = false
-    # Pinned so SLAAC's EUI-64 derivation stays stable across rebuilds - see
-    # the IPv6 addressing note in CLAUDE.md. Resulting address on VLAN 50's
-    # ULA (fd01:eae3:bc39:50::/64): fd01:eae3:bc39:50:be24:11ff:fe42:31c4
+    # Pinned so SLAAC's EUI-64 derivation stays stable across rebuilds (see
+    # CLAUDE.md's IPv6 addressing section). ULA: fd01:eae3:bc39:50:be24:11ff:fe42:31c4
     mac_address = "BC:24:11:42:31:C4"
     mtu         = 0
     name        = "eth0"

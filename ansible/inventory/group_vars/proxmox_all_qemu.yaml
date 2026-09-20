@@ -1,10 +1,9 @@
 ---
-# QEMV VMs aren't reachable via pct exec like LXC, and unlike Proxmox nodes
-# they have no DNS record - so ansible_host is derived from the qemu-guest-agent
-# facts (want_facts: true in inventory/proxmox.yaml), matching the primary NIC's
-# MAC address (proxmox_net0) to the interface it reports and taking its IPv4
-# address. This generalizes to any future VM automatically, as long as the
-# guest agent is installed and running.
+# QEMU VMs aren't reachable via pct exec like LXC and have no DNS record, so
+# ansible_host is derived from qemu-guest-agent facts (want_facts: true in
+# inventory/proxmox.yaml): match the primary NIC's MAC (proxmox_net0) to the
+# interface it reports and take its IPv4 address. Generalizes to any future
+# VM automatically, as long as the guest agent is installed and running.
 ansible_host: >-
   {{
     proxmox_agent_interfaces
@@ -15,9 +14,7 @@ ansible_host: >-
     | map('regex_replace', '/.*$', '')
     | first
   }}
-# VMs provisioned with a cloud-init user_account (tofu's `initialization.user_account`)
-# expose that username as the raw `ciuser` config value, surfaced here as
-# proxmox_ciuser - so cloud-init VMs are reached as that user (assumed to be
-# sudo-capable) automatically, with no per-host override needed. VMs with no
-# cloud-init user configured fall back to root.
+# VMs provisioned with a cloud-init user_account expose that username as
+# proxmox_ciuser, so cloud-init VMs are reached as that user automatically
+# with no per-host override; VMs with none fall back to root.
 ansible_user: "{{ proxmox_ciuser | default('root') }}"

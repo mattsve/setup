@@ -1,17 +1,12 @@
 ---
-# Nut UPS monitoring defaults
-
-# Nut mode: netserver, standalone, or netclient
 nut_mode: netserver
 
-# UPS configuration
 nut_ups_name: ups
 nut_ups:
   driver: usbhid-ups
   port: auto
   desc: "Server UPS"
 
-# Nut users for upsd
 nut_users:
   - name: monuser
     password: "{{ nut_monuser_password | default('secret') }}"
@@ -20,22 +15,17 @@ nut_users:
     password: "{{ nut_mainuser_password | default('secret2') }}"
     acl: "upsmon primary"
 
-# Monitor configuration
 nut_monitor_host: localhost
 nut_monitor_user: "{{ nut_users[1].name }}"
 nut_monitor_password: "{{ nut_users[1].password }}"
 nut_monitor_role: master
 nut_monitor_power_value: 1
 
-# upsd.conf settings
 nut_listen_address: "0.0.0.0"
 
-# Service names
 nut_server_service: nut-server
 nut_monitor_service: nut-monitor
 
-# Shutdown command for upsmon
 nut_shutdown_command: /sbin/shutdown -h +0
 
-# Udev rule source
 nut_udev_rule_source: /lib/udev/rules.d/62-nut-usbups.rules

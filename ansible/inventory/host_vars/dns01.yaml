@@ -1,80 +1,37 @@
 ---
-# dns01's own cert covers both names it's reachable as: the friendly "dns"
-# name (certbot_domains[0], also the lineage name technitium_domain below
-# points at) and its own dns01.server.agb.ingenstans.se record - same
-# generic-service-name-vs-host-name split as caddy/plex (reverse-proxy01 ->
-# caddy, plex01 -> plex) for the first, hardcoded here rather than built
-# from inventory_hostname.
-#
-# Both names validate fine via the same Cloudflare DNS-01 challenge even
-# though only agb.ingenstans.se - not server.agb.ingenstans.se - is a zone
-# Cloudflare actually hosts: dns01.server.agb.ingenstans.se is still a
-# subdomain *of* agb.ingenstans.se, and nothing delegates server.agb.
-# ingenstans.se away from Cloudflare (see its "no NS delegation needed"
-# zone comment below), so Cloudflare remains the public authority for that
-# name too and can place the challenge TXT record under it like any other
-# subdomain. This is the split-horizon property that makes the whole setup
-# work: Cloudflare stays authoritative for the public DNS-01 lookup across
-# all of agb.ingenstans.se, while the same-named Primary zone inside
-# Technitium (technitium_zones below) independently serves different,
-# internal-only answers for specific names - the two are resolved through
-# entirely separate paths (Cloudflare's public nameservers vs. Technitium's
-# API) and never conflict.
+# Both names validate via the same Cloudflare DNS-01 challenge: Cloudflare
+# hosts ingenstans.se itself (the only zone it's authoritative for here),
+# and both names are subdomains of that, not delegated elsewhere. Split-
+# horizon: Technitium (technitium_zones below) serves different, internal-
+# only answers for the same names via a separate path.
 certbot_domains:
   - dns.agb.ingenstans.se
   - dns01.server.agb.ingenstans.se
 technitium_domain: dns.agb.ingenstans.se
 
 technitium_zones:
-  # hem.ingenstans.se is being retired in favor of agb.ingenstans.se.
-  # certbot still issues certs for hem.ingenstans.se for now (that
-  # migration happens later, and will need both domains supported for a
-  # transition period).
   - zone: agb.ingenstans.se
     type: Primary
-  # Re-added (was previously dropped as "no longer needed") once VLAN 50
-  # guests moved to Technitium as their DNS server: unlike LAN clients,
-  # they no longer reach OPNsense/AdGuard, which is where hem.ingenstans.se
-  # names still live by hand, so any of those names a VLAN 50 guest needs
-  # (e.g. plex01's l-space Samba mount, below) has to be mirrored here for
-  # now instead. Not a full migration back - just records VLAN 50 guests
-  # actually need.
+  # Being retired in favor of agb.ingenstans.se, but still needed by VLAN 50
+  # guests that can't reach OPNsense/AdGuard for these names.
   - zone: hem.ingenstans.se
     type: Primary
-  # Independent Primary zone for VLAN 50 hosts, not a delegated subdomain
-  # of agb.ingenstans.se - no NS delegation needed since the same
-  # Technitium instance is authoritative for both. The server DHCP scope's
-  # domainName points here so leases auto-register as
-  # <hostname>.server.agb.ingenstans.se. Friendly names in
-  # agb.ingenstans.se (e.g. plex.agb.ingenstans.se) are CNAMEs into this
-  # zone now that reverse-proxy01 itself has migrated to VLAN 50.
+  # Independent Primary zone, not delegated - no NS delegation needed since
+  # this same Technitium instance is authoritative for both. DHCP leases
+  # auto-register here (dnsUpdates below).
   - zone: server.agb.ingenstans.se
     type: Primary
   - zone: management.agb.ingenstans.se
     type: Primary
 
-# Sign every Primary zone except hem.ingenstans.se, which is being retired
-# (see the zone comment above) - not worth signing a zone on its way out.
-# None of these are delegated to dns01 from a real parent zone (they're all
-# internal-only), so this doesn't build a chain of trust an external
-# resolver could follow - its value here is a validating client on the LAN/
-# VLAN 50 being able to detect a tampered/spoofed answer for these zones,
-# not public verifiability.
+# hem.ingenstans.se excluded - being retired, not worth signing.
 technitium_dnssec_zones:
   - agb.ingenstans.se
   - server.agb.ingenstans.se
   - management.agb.ingenstans.se
 
-# Starter set: the hostnames caddy already reverse-proxies (see
-# host_vars/reverse-proxy01.yaml's caddy_proxies) all need to resolve
-# internally to reverse-proxy01 itself, not wherever public DNS points
-# agb.ingenstans.se. Extend this list as more internal names are needed
-# (e.g. per-host <hostname>.agb.ingenstans.se records).
-#
-# CNAMEs rather than A records pointing at a fixed IP: reverse-proxy01 is
-# DHCP-addressed on VLAN 50 (see tofu/lxc_reverse_proxy.tf), so its own
-# server.agb.ingenstans.se record (auto-registered by the DHCP lease, per
-# dnsUpdates below) is the only place its current address needs to live.
+# Friendly agb.ingenstans.se names as CNAMEs into server.agb.ingenstans.se,
+# since the backing hosts are DHCP-addressed there rather than static.
 technitium_records:
   - name: plex.agb.ingenstans.se
     zone: agb.ingenstans.se
@@ -91,27 +48,19 @@ technitium_records:
     type: CNAME
     cname: reverse-proxy01.server.agb.ingenstans.se
     ttl: 3600
-  # dns01's own friendly name - the cert (certbot_domains above) and the
-  # Technitium web console/DoT/DoH now all identify as this name, so it
-  # needs to actually resolve, same CNAME-into-server.agb pattern as
-  # plex/pve/pulse above.
   - name: dns.agb.ingenstans.se
     zone: agb.ingenstans.se
     type: CNAME
     cname: dns01.server.agb.ingenstans.se
     ttl: 3600
-  # Added ahead of mqtt01's VLAN 50 move (not live yet - see
-  # host_vars/mqtt01.yaml's matching certbot_domains addition), same
-  # CNAME-into-server.agb pattern as plex/pve/pulse/dns above.
   - name: mqtt.agb.ingenstans.se
     zone: agb.ingenstans.se
     type: CNAME
     cname: mqtt01.server.agb.ingenstans.se
     ttl: 3600
 
-  # dns01 itself is static, not a DHCP lease, so it doesn't get an
-  # auto-registered record from the server scope's dnsUpdates - added by
-  # hand instead. See CLAUDE.md for the ULA/EUI-64 derivation.
+  # dns01 itself is static, not a DHCP lease, so it gets no auto-registered
+  # record from the server scope's dnsUpdates - added by hand instead.
   - name: dns01.server.agb.ingenstans.se
     zone: server.agb.ingenstans.se
     type: A
@@ -123,33 +72,19 @@ technitium_records:
     ipAddress: fd01:eae3:bc39:50:be24:11ff:fe7d:ccf0
     ttl: 3600
 
-  # reverse-proxy01's A record comes from the DHCP lease's auto-registration
-  # (dnsUpdates only covers A/PTR, per the scope note below) - but its AAAA
-  # doesn't, since that's SLAAC-derived, not DHCP-assigned, so it's added by
-  # hand here instead, same as dns01's above. See CLAUDE.md for the
-  # ULA/EUI-64 derivation.
+  # AAAA records are added by hand for every host below: dnsUpdates only
+  # auto-registers the DHCP lease's A record, and IPv6 is SLAAC-derived, not
+  # DHCP-assigned (see CLAUDE.md's IPv6 addressing section).
   - name: reverse-proxy01.server.agb.ingenstans.se
     zone: server.agb.ingenstans.se
     type: AAAA
     ipAddress: fd01:eae3:bc39:50:be24:11ff:fecb:eab5
     ttl: 3600
-
-  # plex01's A record comes from the DHCP lease's auto-registration, same as
-  # reverse-proxy01's above - but its AAAA is SLAAC-derived, not
-  # DHCP-assigned, so it's added by hand here too. See CLAUDE.md for the
-  # ULA/EUI-64 derivation.
   - name: plex01.server.agb.ingenstans.se
     zone: server.agb.ingenstans.se
     type: AAAA
     ipAddress: fd01:eae3:bc39:50:be24:11ff:fe82:633b
     ttl: 3600
-
-  # mqtt01 hasn't moved to VLAN 50 yet (tofu/lxc_mqtt.tf is still LAN/static)
-  # - this is prep for that move, same EUI-64 interface ID as its current
-  # LAN ULA (fd01:eae3:bc39:100:be24:11ff:fe42:31c4, CLAUDE.md) carried over
-  # onto VLAN 50's prefix. No A record yet: that comes from DHCP lease
-  # auto-registration once the move actually happens, same as plex01's
-  # above.
   - name: mqtt01.server.agb.ingenstans.se
     zone: server.agb.ingenstans.se
     type: AAAA
@@ -163,34 +98,29 @@ technitium_records:
     ttl: 3600
 
   # l-space is LAN-only (static, not Technitium-managed) - mirrored by hand
-  # so plex01's Samba mount (roles/plex's plex_media_share) can resolve it
-  # from VLAN 50. See the hem.ingenstans.se zone comment above.
+  # so plex01's Samba mount can resolve it from VLAN 50.
   - name: l-space.hem.ingenstans.se
     zone: hem.ingenstans.se
     type: A
     ipAddress: 10.0.0.3
     ttl: 3600
 
-# One scope per VLAN (see technitium_dhcp_scopes in
-# roles/technitium/defaults/main.yaml for the relay prerequisites on
-# OPNsense's side). .2-.49 held back for infra/static assignments.
+# One scope per VLAN. .2-.49 held back for infra/static assignments.
 technitium_dhcp_scopes:
   - name: server
     startingAddress: 10.1.50.50
     endingAddress: 10.1.50.250
     subnetMask: 255.255.255.0
     routerAddress: 10.1.50.1
-    # Auto-registers an A/PTR record per lease under server.agb.ingenstans.se,
-    # named from the client's DHCP hostname option. If leases aren't
-    # showing up in the zone, check the zone's own Dynamic Updates
-    # setting in the Technitium console too - this scope option alone
-    # may not be enough.
+    # Auto-registers an A/PTR record per lease under server.agb.ingenstans.se.
+    # If leases aren't showing up, check the zone's own Dynamic Updates
+    # setting in the Technitium console too - this scope option alone may
+    # not be enough.
     domainName: server.agb.ingenstans.se
     dnsUpdates: true
-    # Without this, clients got whatever Technitium's own default DNS
-    # option is (10.0.0.1 - AdGuard's LAN address), which is unreachable
-    # the same way dns01's own resolver was: AdGuard replies from its
-    # VLAN-50-facing address, not the address queried, so the reply gets
-    # silently dropped as a mismatch. This makes Technitium itself the
-    # DNS server clients get instead.
+    # Without this, clients got Technitium's own default DNS option
+    # (10.0.0.1, AdGuard's LAN address), which is unreachable the same way
+    # dns01's own resolver was (see lxc_dns.tf): AdGuard replies from a
+    # different source address than the one queried, so the reply gets
+    # silently dropped.
     useThisDnsServer: true
