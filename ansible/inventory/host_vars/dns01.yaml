@@ -23,12 +23,17 @@ technitium_zones:
     type: Primary
   - zone: management.agb.ingenstans.se
     type: Primary
+  # VLAN 80 (IoT): its own namespace rather than sharing server.agb.ingenstans.se,
+  # so IoT leases stay out of the general-server namespace.
+  - zone: iot.agb.ingenstans.se
+    type: Primary
 
 # hem.ingenstans.se excluded - being retired, not worth signing.
 technitium_dnssec_zones:
   - agb.ingenstans.se
   - server.agb.ingenstans.se
   - management.agb.ingenstans.se
+  - iot.agb.ingenstans.se
 
 # Friendly agb.ingenstans.se names as CNAMEs into server.agb.ingenstans.se,
 # since the backing hosts are DHCP-addressed there rather than static.
@@ -123,4 +128,16 @@ technitium_dhcp_scopes:
     # dns01's own resolver was (see lxc_dns.tf): AdGuard replies from a
     # different source address than the one queried, so the reply gets
     # silently dropped.
+    useThisDnsServer: true
+
+  # VLAN 80 (IoT). Unlike the server scope above, dns01 doesn't sit on this
+  # VLAN itself - requests reach it relayed via OPNsense's VLAN 80 interface
+  # (see tofu/firewall_dns.tf), not as direct broadcasts.
+  - name: iot
+    startingAddress: 10.1.80.50
+    endingAddress: 10.1.80.250
+    subnetMask: 255.255.255.0
+    routerAddress: 10.1.80.1
+    domainName: iot.agb.ingenstans.se
+    dnsUpdates: true
     useThisDnsServer: true

@@ -26,8 +26,21 @@ resource "proxmox_virtual_environment_firewall_rules" "dns" {
     action  = "ACCEPT"
     proto   = "udp"
     dport   = "53"
-    source  = "10.0.0.0/22,10.1.50.0/24"
-    comment = "DNS from the LAN and VLAN 50"
+    source  = "10.0.0.0/22,10.1.50.0/24,10.1.80.0/24"
+    comment = "DNS from the LAN, VLAN 50, and VLAN 80"
+  }
+
+  # IPv6 counterpart, scoped to each network's ULA /64 rather than its GUA
+  # range - clients get dns01 as their resolver via its ULA (RDNSS override,
+  # see CLAUDE.md), and Proxmox's firewall rejects mixing IPv4/IPv6 in one
+  # source list, so this can't just be folded into the rule above.
+  rule {
+    type    = "in"
+    action  = "ACCEPT"
+    proto   = "udp"
+    dport   = "53"
+    source  = "fd01:eae3:bc39:100::/64,fd01:eae3:bc39:32::/64,fd01:eae3:bc39:50::/64"
+    comment = "DNS (IPv6/ULA) from the LAN, VLAN 50, and VLAN 80"
   }
 
   rule {
@@ -35,8 +48,17 @@ resource "proxmox_virtual_environment_firewall_rules" "dns" {
     action  = "ACCEPT"
     proto   = "tcp"
     dport   = "53"
-    source  = "10.0.0.0/22,10.1.50.0/24"
-    comment = "DNS (TCP fallback) from the LAN and VLAN 50"
+    source  = "10.0.0.0/22,10.1.50.0/24,10.1.80.0/24"
+    comment = "DNS (TCP fallback) from the LAN, VLAN 50, and VLAN 80"
+  }
+
+  rule {
+    type    = "in"
+    action  = "ACCEPT"
+    proto   = "tcp"
+    dport   = "53"
+    source  = "fd01:eae3:bc39:100::/64,fd01:eae3:bc39:32::/64,fd01:eae3:bc39:50::/64"
+    comment = "DNS (TCP fallback, IPv6/ULA) from the LAN, VLAN 50, and VLAN 80"
   }
 
   # Direct, not relayed - dns01 sits on VLAN 50 itself, the same subnet as
@@ -51,13 +73,34 @@ resource "proxmox_virtual_environment_firewall_rules" "dns" {
     comment = "DHCP (direct, not relayed) from VLAN 50 clients"
   }
 
+  # Relayed, not direct - dns01 doesn't sit on VLAN 80, so requests arrive
+  # unicast from OPNsense's VLAN 80 interface (the relay agent) rather than
+  # as client broadcasts.
+  rule {
+    type    = "in"
+    action  = "ACCEPT"
+    proto   = "udp"
+    dport   = "67"
+    source  = "10.1.80.1"
+    comment = "DHCP (relayed via OPNsense) from VLAN 80"
+  }
+
   rule {
     type    = "in"
     action  = "ACCEPT"
     proto   = "tcp"
     dport   = "853"
-    source  = "10.0.0.0/22,10.1.50.0/24"
-    comment = "DNS-over-TLS from the LAN and VLAN 50"
+    source  = "10.0.0.0/22,10.1.50.0/24,10.1.80.0/24"
+    comment = "DNS-over-TLS from the LAN, VLAN 50, and VLAN 80"
+  }
+
+  rule {
+    type    = "in"
+    action  = "ACCEPT"
+    proto   = "tcp"
+    dport   = "853"
+    source  = "fd01:eae3:bc39:100::/64,fd01:eae3:bc39:32::/64,fd01:eae3:bc39:50::/64"
+    comment = "DNS-over-TLS (IPv6/ULA) from the LAN, VLAN 50, and VLAN 80"
   }
 
   rule {
@@ -65,8 +108,17 @@ resource "proxmox_virtual_environment_firewall_rules" "dns" {
     action  = "ACCEPT"
     proto   = "tcp"
     dport   = "443"
-    source  = "10.0.0.0/22,10.1.50.0/24"
-    comment = "DNS-over-HTTPS from the LAN and VLAN 50"
+    source  = "10.0.0.0/22,10.1.50.0/24,10.1.80.0/24"
+    comment = "DNS-over-HTTPS from the LAN, VLAN 50, and VLAN 80"
+  }
+
+  rule {
+    type    = "in"
+    action  = "ACCEPT"
+    proto   = "tcp"
+    dport   = "443"
+    source  = "fd01:eae3:bc39:100::/64,fd01:eae3:bc39:32::/64,fd01:eae3:bc39:50::/64"
+    comment = "DNS-over-HTTPS (IPv6/ULA) from the LAN, VLAN 50, and VLAN 80"
   }
 
   # Not narrowed to a single admin source like pulse01's dashboard rule -
@@ -77,7 +129,16 @@ resource "proxmox_virtual_environment_firewall_rules" "dns" {
     action  = "ACCEPT"
     proto   = "tcp"
     dport   = "53443"
-    source  = "10.0.0.0/22,10.1.50.0/24"
-    comment = "Technitium web console (HTTPS) from the LAN and VLAN 50"
+    source  = "10.0.0.0/22,10.1.50.0/24,10.1.80.0/24"
+    comment = "Technitium web console (HTTPS) from the LAN, VLAN 50, and VLAN 80"
+  }
+
+  rule {
+    type    = "in"
+    action  = "ACCEPT"
+    proto   = "tcp"
+    dport   = "53443"
+    source  = "fd01:eae3:bc39:100::/64,fd01:eae3:bc39:32::/64,fd01:eae3:bc39:50::/64"
+    comment = "Technitium web console (HTTPS, IPv6/ULA) from the LAN, VLAN 50, and VLAN 80"
   }
 }
