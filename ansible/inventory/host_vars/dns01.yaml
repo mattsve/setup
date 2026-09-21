@@ -122,6 +122,12 @@ technitium_dhcp_scopes:
     # setting in the Technitium console too - this scope option alone may
     # not be enough.
     domainName: server.agb.ingenstans.se
+    # domainName alone (DHCP option 15) is also what clients got as their
+    # search domain, so they searched server.agb.ingenstans.se rather than
+    # the friendlier agb.ingenstans.se - domainSearchList (option 119) is
+    # the separate, client-facing search-suffix list.
+    domainSearchList:
+      - agb.ingenstans.se
     dnsUpdates: true
     # Without this, clients got Technitium's own default DNS option
     # (10.0.0.1, AdGuard's LAN address), which is unreachable the same way
@@ -139,5 +145,8 @@ technitium_dhcp_scopes:
     subnetMask: 255.255.255.0
     routerAddress: 10.1.80.1
     domainName: iot.agb.ingenstans.se
+    # Same domainName/domainSearchList split as the server scope above.
+    domainSearchList:
+      - agb.ingenstans.se
     dnsUpdates: true
     useThisDnsServer: true
