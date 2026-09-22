@@ -25,6 +25,13 @@ resource "proxmox_virtual_environment_container" "dns" {
     type      = "tty"
   }
 
+  # Bumped from the default 1 core / 512MB for the HaGeZi Pro block list
+  # (technitium_block_list_urls in host_vars/dns01.yaml) - Technitium loads
+  # the whole list into memory and needs the CPU headroom to parse/update it.
+  cpu {
+    cores = 2
+  }
+
   disk {
     datastore_id = "storage-zfs"
     size         = 4
@@ -52,7 +59,7 @@ resource "proxmox_virtual_environment_container" "dns" {
   }
 
   memory {
-    dedicated = 512
+    dedicated = 4096
     swap      = 512
   }
 

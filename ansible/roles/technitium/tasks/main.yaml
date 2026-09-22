@@ -116,6 +116,34 @@
     label: "{{ item.item }}"
   when: item.dnssec_properties.dnssecStatus == 'Unsigned'
 
+- name: Configure Technitium DNS blocking
+  # blockListUrls can't be set to an empty list directly (the module rejects
+  # it) - clearing it requires the explicit clear_ flag instead, which this
+  # sets whenever the desired list is empty.
+  effectivelywild.technitium_dns.technitium_dns_set_server_settings:
+    api_url: "{{ technitium_api_url }}"
+    api_token: "{{ technitium_api_token }}"
+    enableBlocking: "{{ technitium_blocking_enabled }}"
+    blockingType: "{{ technitium_blocking_type }}"
+    blockListUpdateIntervalHours: "{{ technitium_block_list_update_interval_hours }}"
+    blockingBypassList: "{{ technitium_blocking_bypass_list }}"
+    blockListUrls: "{{ technitium_block_list_urls }}"
+    clear_blockListUrls: "{{ technitium_block_list_urls | length == 0 }}"
+
+- name: Ensure manually blocked domains
+  effectivelywild.technitium_dns.technitium_dns_add_blocked_zone:
+    api_url: "{{ technitium_api_url }}"
+    api_token: "{{ technitium_api_token }}"
+    domain: "{{ item }}"
+  loop: "{{ technitium_blocked_zones }}"
+
+- name: Ensure manually allowed domains
+  effectivelywild.technitium_dns.technitium_dns_add_allowed_zone:
+    api_url: "{{ technitium_api_url }}"
+    api_token: "{{ technitium_api_token }}"
+    domain: "{{ item }}"
+  loop: "{{ technitium_allowed_zones }}"
+
 - name: Ensure Technitium DHCP scopes
   effectivelywild.technitium_dns.technitium_dns_set_dhcp_scope:
     "{{ {'api_url': technitium_api_url, 'api_token': technitium_api_token} | combine(item) }}"

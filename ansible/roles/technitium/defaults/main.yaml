@@ -75,3 +75,30 @@ technitium_apps: []
 # New scopes are created disabled by Technitium's API, so this role
 # explicitly enables each one after setting it up.
 technitium_dhcp_scopes: []
+
+# DNS-based blocking (ads/trackers/malware). Aggregated block list URLs are
+# supplied per host in host_vars/dns01.yaml, e.g.:
+#   technitium_block_list_urls:
+#     - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/hosts/pro.txt
+technitium_block_list_urls: []
+technitium_block_list_update_interval_hours: 24
+# NxDomain rather than AnyAddress/CustomAddress: a blocked query returns
+# "domain doesn't exist", which behaves correctly for every record type
+# without needing a placeholder address.
+technitium_blocking_type: NxDomain
+# Client IPs exempt from blocking entirely - e.g. a device that needs an
+# otherwise-blocked domain to work.
+technitium_blocking_bypass_list: []
+# Manually blocked/allowed domains, independent of the block lists above -
+# supplied per host, e.g.:
+#   technitium_blocked_zones: [doubleclick.net]
+#   technitium_allowed_zones: [some-domain-a-blocklist-overblocks.example.com]
+# Both are add-only (no state-based module exists for them, unlike
+# technitium_zones/technitium_records): removing an entry here doesn't
+# un-block/un-allow it on the server, that still needs a manual console
+# edit or technitium_dns_delete_blocked_zone/delete_allowed_zone run by hand.
+technitium_blocked_zones: []
+technitium_allowed_zones: []
+# Derives from whether there's anything to block, rather than a separate
+# manual flag, same pattern as technitium_tls_enabled above.
+technitium_blocking_enabled: "{{ (technitium_block_list_urls | length > 0) or (technitium_blocked_zones | length > 0) }}"
