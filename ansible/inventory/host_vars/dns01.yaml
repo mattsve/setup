@@ -115,7 +115,7 @@ technitium_apps:
     url: https://download.technitium.com/dns/apps/QueryLogsSqliteApp-v9.1.2.zip
 
 technitium_block_list_urls:
-  - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/hosts/pro.txt
+  - https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/multi-onlydomains.txt
 
 # One scope per VLAN. .2-.49 held back for infra/static assignments.
 technitium_dhcp_scopes:
