@@ -110,6 +110,10 @@ technitium_records:
     ipAddress: 10.0.0.3
     ttl: 3600
 
+technitium_apps:
+  - name: Query Logs (Sqlite)
+    url: https://download.technitium.com/dns/apps/QueryLogsSqliteApp-v9.1.2.zip
+
 # One scope per VLAN. .2-.49 held back for infra/static assignments.
 technitium_dhcp_scopes:
   - name: server

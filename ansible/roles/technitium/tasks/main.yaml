@@ -131,3 +131,22 @@
   loop: "{{ technitium_dhcp_scopes }}"
   loop_control:
     label: "{{ item.name }}"
+
+- name: Install Technitium DNS apps
+  # No-ops on an app that's already installed rather than updating it -
+  # see the update task below for that.
+  effectivelywild.technitium_dns.technitium_dns_download_and_install_app:
+    "{{ {'api_url': technitium_api_url, 'api_token': technitium_api_token} | combine(item) }}"
+  loop: "{{ technitium_apps }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Update Technitium DNS apps
+  # No when: guard needed: download_and_update_app fails against an app
+  # that isn't installed, but the task above guarantees it always is by
+  # this point.
+  effectivelywild.technitium_dns.technitium_dns_download_and_update_app:
+    "{{ {'api_url': technitium_api_url, 'api_token': technitium_api_token} | combine(item) }}"
+  loop: "{{ technitium_apps }}"
+  loop_control:
+    label: "{{ item.name }}"

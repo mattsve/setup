@@ -61,6 +61,11 @@ technitium_dnssec_algorithm: ECDSA
 technitium_dnssec_curve: P256
 technitium_dnssec_nx_proof: NSEC3
 
+# Supplied per host in host_vars/dns01.yaml, e.g.:
+#   - name: Query Logs (Sqlite)
+#     url: https://download.technitium.com/dns/apps/QueryLogsSqliteApp-v9.1.2.zip
+technitium_apps: []
+
 # One scope per VLAN, supplied per host in host_vars/dns01.yaml, e.g.:
 #   - name: iot
 #     startingAddress: 10.0.20.10
