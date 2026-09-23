@@ -1,6 +1,6 @@
 ---
 plugin: community.proxmox.proxmox
-url: https://pve1.hem.ingenstans.se:8006
+url: https://pve01.management.agb.ingenstans.se:8006
 user: root@pam
 token_id: ansible
 validate_certs: true

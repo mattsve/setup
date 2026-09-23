@@ -99,7 +99,18 @@ technitium_records:
   - name: pve01.management.agb.ingenstans.se
     zone: management.agb.ingenstans.se
     type: A
-    ipAddress: 10.0.0.2
+    ipAddress: 10.1.10.2
+    ttl: 3600
+  - name: pve01.management.agb.ingenstans.se
+    zone: management.agb.ingenstans.se
+    type: AAAA
+    ipAddress: fd01:eae3:bc39:a:3eec:efff:fe95:f0f8
+    ttl: 3600
+  # Lets group_vars/proxmox_nodes.yaml derive ansible_host again.
+  - name: pve1.management.agb.ingenstans.se
+    zone: management.agb.ingenstans.se
+    type: CNAME
+    cname: pve01.management.agb.ingenstans.se
     ttl: 3600
 
   # l-space is LAN-only (static, not Technitium-managed) - mirrored by hand
@@ -161,6 +172,6 @@ technitium_dhcp_scopes:
       - hostName: slzb-mr3
         hardwareAddress: "88:57:21:6B:D6:C7"
         address: 10.1.80.50
-      - hostname: zwa-2
+      - hostName: zwa-2
         hardwareAddress: "E8:F6:0A:84:A1:23"
         address: 10.1.80.53

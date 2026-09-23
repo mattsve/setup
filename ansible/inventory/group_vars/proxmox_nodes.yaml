@@ -1,3 +1,5 @@
 ---
-ansible_host: "{{ inventory_hostname }}.hem.ingenstans.se"
+# Derived from inventory_hostname via a CNAME (host_vars/dns01.yaml), same
+# as the old .hem.ingenstans.se suffix - see CLAUDE.md's IPv6/VLAN section.
+ansible_host: "{{ inventory_hostname }}.management.agb.ingenstans.se"
 ansible_user: root
