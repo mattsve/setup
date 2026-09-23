@@ -157,3 +157,7 @@ technitium_dhcp_scopes:
       - agb.ingenstans.se
     dnsUpdates: true
     useThisDnsServer: true
+    reservedLeases:
+      - hostName: slzb-mr3
+        hardwareAddress: "88:57:21:6B:D6:C7"
+        address: 10.1.80.50
