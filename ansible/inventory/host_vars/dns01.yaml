@@ -161,3 +161,6 @@ technitium_dhcp_scopes:
       - hostName: slzb-mr3
         hardwareAddress: "88:57:21:6B:D6:C7"
         address: 10.1.80.50
+      - hostname: zwa-2
+        hardwareAddress: "E8:F6:0A:84:A1:23"
+        address: 10.1.80.53
