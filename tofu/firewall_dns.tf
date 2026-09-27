@@ -37,10 +37,11 @@ resource "proxmox_virtual_environment_firewall_rules" "dns" {
     comment = "DNS (TCP fallback)"
   }
 
-  # Covers both VLAN 50's direct clients (including their own pre-lease
-  # broadcast DHCPDISCOVERs at 0.0.0.0) and VLAN 80's relayed requests
-  # (arriving unicast from OPNsense's relay agent) - no source restriction
-  # needed for either now that reachability is OPNsense's job.
+  # Covers VLAN 50's direct clients (including their own pre-lease
+  # broadcast DHCPDISCOVERs at 0.0.0.0) and VLAN 10's/VLAN 80's relayed
+  # requests (arriving unicast from OPNsense's relay agent) - no source
+  # restriction needed for any of them now that reachability is OPNsense's
+  # job.
   rule {
     type    = "in"
     action  = "ACCEPT"
