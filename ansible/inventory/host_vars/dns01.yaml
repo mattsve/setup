@@ -182,7 +182,10 @@ technitium_dhcp_scopes:
         address: 10.1.80.50
       - hostName: zwa-2
         hardwareAddress: "E8:F6:0A:84:A1:23"
-        address: 10.1.80.53
+        address: 10.1.80.54
+      - hostName: WGB256ABSN
+        hardwareAddress: "C8:D7:78:B1:48:09"
+        address: 10.1.80.55
 
   # VLAN 10 (management). Like VLAN 80, dns01 doesn't sit on this VLAN
   # itself - requests reach it relayed via OPNsense's VLAN 10 interface
