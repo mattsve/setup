@@ -18,6 +18,10 @@ caddy_service: caddy
 # Reverse-proxy routes, supplied per host (host_vars/reverse-proxy01.yaml):
 #   - hostname: plex.hem.ingenstans.se
 #     backend: 10.0.2.3:32400
-#     backend_scheme: http        # optional, defaults to http
-#     backend_tls_insecure: false # optional, for self-signed backend certs
+#     backend_scheme: http         # optional, defaults to http
+#     backend_tls_insecure: false  # optional, for self-signed backend certs
+#     backend_host_header: false   # optional, forwards the original Host
+#                                  # header instead of the backend's own -
+#                                  # needed by backends (e.g. UniFi) that
+#                                  # validate/redirect on Host
 caddy_proxies: []
