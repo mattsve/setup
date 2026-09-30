@@ -68,6 +68,11 @@ technitium_records:
     type: CNAME
     cname: reverse-proxy01.server.agb.ingenstans.se
     ttl: 3600
+  - name: k9.agb.ingenstans.se
+    zone: agb.ingenstans.se
+    type: CNAME
+    cname: dreame_vacuum_r2416a.iot.agb.ingenstans.se
+    ttl: 3600
 
   # dns01 itself is static, not a DHCP lease, so it gets no auto-registered
   # record from the server scope's dnsUpdates - added by hand instead.
@@ -184,12 +189,21 @@ technitium_dhcp_scopes:
       - hostName: slzb-mr3
         hardwareAddress: "88:57:21:6B:D6:C7"
         address: 10.1.80.50
+      - hostName: Pioneer-VSX-LX305-610A64
+        hardwareAddress: "00:09:B0:61:0A:64"
+        address: 10.1.80.51
       - hostName: zwa-2
         hardwareAddress: "E8:F6:0A:84:A1:23"
         address: 10.1.80.54
       - hostName: WGB256ABSN
         hardwareAddress: "C8:D7:78:B1:48:09"
         address: 10.1.80.55
+      - hostName: wlan0
+        hardwareAddress: "70:89:76:FE:6A:87"
+        address: 10.1.80.58
+      - hostName: ESP_4F421E
+        hardwareAddress: "BC:FF:4D:4F:42:1E"
+        address: 10.1.80.59
 
   # VLAN 10 (management). Like VLAN 80, dns01 doesn't sit on this VLAN
   # itself - requests reach it relayed via OPNsense's VLAN 10 interface
