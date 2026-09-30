@@ -158,8 +158,34 @@ technitium_apps:
 technitium_block_list_urls:
   - https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/multi-onlydomains.txt
 
-# One scope per VLAN. .2-.49 held back for infra/static assignments.
+# One scope per VLAN, ordered by VLAN number. .2-.49 held back for
+# infra/static assignments.
 technitium_dhcp_scopes:
+  # VLAN 10 (management). dns01 doesn't sit on this VLAN itself - requests
+  # reach it relayed via OPNsense's VLAN 10 interface (IP Helper), not as
+  # direct broadcasts.
+  - name: management
+    startingAddress: 10.1.10.50
+    endingAddress: 10.1.10.250
+    subnetMask: 255.255.255.0
+    routerAddress: 10.1.10.1
+    domainName: management.agb.ingenstans.se
+    # domainName alone (DHCP option 15) is also what clients got as their
+    # search domain, so they searched server.agb.ingenstans.se rather than
+    # the friendlier agb.ingenstans.se - domainSearchList (option 119) is
+    # the separate, client-facing search-suffix list.
+    domainSearchList:
+      - agb.ingenstans.se
+    dnsUpdates: true
+    useThisDnsServer: true
+    reservedLeases:
+      - hostName: cloudkey
+        hardwareAddress: "24:5A:4C:8F:72:4D"
+        address: 10.1.10.50
+      - hostName: ipmi-pve01
+        hardwareAddress: "3C:EC:EF:95:EF:5A"
+        address: 10.1.10.51
+
   - name: server
     startingAddress: 10.1.50.50
     endingAddress: 10.1.50.250
@@ -170,10 +196,7 @@ technitium_dhcp_scopes:
     # setting in the Technitium console too - this scope option alone may
     # not be enough.
     domainName: server.agb.ingenstans.se
-    # domainName alone (DHCP option 15) is also what clients got as their
-    # search domain, so they searched server.agb.ingenstans.se rather than
-    # the friendlier agb.ingenstans.se - domainSearchList (option 119) is
-    # the separate, client-facing search-suffix list.
+    # Same domainName/domainSearchList split as the management scope above.
     domainSearchList:
       - agb.ingenstans.se
     dnsUpdates: true
@@ -184,6 +207,25 @@ technitium_dhcp_scopes:
     # silently dropped.
     useThisDnsServer: true
 
+  # VLAN 70 (security). Like management, dns01 doesn't sit on this VLAN
+  # itself - requests reach it relayed via OPNsense's VLAN 70 interface (IP
+  # Helper), not as direct broadcasts.
+  - name: security
+    startingAddress: 10.1.70.50
+    endingAddress: 10.1.70.250
+    subnetMask: 255.255.255.0
+    routerAddress: 10.1.70.1
+    domainName: security.agb.ingenstans.se
+    # Same domainName/domainSearchList split as the other scopes above.
+    domainSearchList:
+      - agb.ingenstans.se
+    dnsUpdates: true
+    useThisDnsServer: true
+    reservedLeases:
+      - hostName: keba-p30
+        hardwareAddress: "00:60:B5:4E:2E:07"
+        address: 10.1.70.50
+
   # VLAN 80 (IoT). Unlike the server scope above, dns01 doesn't sit on this
   # VLAN itself - requests reach it relayed via OPNsense's VLAN 80 interface
   # (see tofu/firewall_dns.tf), not as direct broadcasts.
@@ -193,7 +235,7 @@ technitium_dhcp_scopes:
     subnetMask: 255.255.255.0
     routerAddress: 10.1.80.1
     domainName: iot.agb.ingenstans.se
-    # Same domainName/domainSearchList split as the server scope above.
+    # Same domainName/domainSearchList split as the other scopes above.
     domainSearchList:
       - agb.ingenstans.se
     dnsUpdates: true
@@ -218,50 +260,9 @@ technitium_dhcp_scopes:
         hardwareAddress: "BC:FF:4D:4F:42:1E"
         address: 10.1.80.59
 
-  # VLAN 10 (management). Like VLAN 80, dns01 doesn't sit on this VLAN
-  # itself - requests reach it relayed via OPNsense's VLAN 10 interface
-  # (IP Helper), not as direct broadcasts.
-  - name: management
-    startingAddress: 10.1.10.50
-    endingAddress: 10.1.10.250
-    subnetMask: 255.255.255.0
-    routerAddress: 10.1.10.1
-    domainName: management.agb.ingenstans.se
-    # Same domainName/domainSearchList split as the server/iot scopes above.
-    domainSearchList:
-      - agb.ingenstans.se
-    dnsUpdates: true
-    useThisDnsServer: true
-    reservedLeases:
-      - hostName: cloudkey
-        hardwareAddress: "24:5A:4C:8F:72:4D"
-        address: 10.1.10.50
-      - hostName: ipmi-pve01
-        hardwareAddress: "3C:EC:EF:95:EF:5A"
-        address: 10.1.10.51
-
-  # VLAN 70 (security). Like iot/management, dns01 doesn't sit on this VLAN
-  # itself - requests reach it relayed via OPNsense's VLAN 70 interface (IP
-  # Helper), not as direct broadcasts.
-  - name: security
-    startingAddress: 10.1.70.50
-    endingAddress: 10.1.70.250
-    subnetMask: 255.255.255.0
-    routerAddress: 10.1.70.1
-    domainName: security.agb.ingenstans.se
-    # Same domainName/domainSearchList split as the other scopes above.
-    domainSearchList:
-      - agb.ingenstans.se
-    dnsUpdates: true
-    useThisDnsServer: true
-    reservedLeases:
-      - hostName: keba-p30
-        hardwareAddress: "00:60:B5:4E:2E:07"
-        address: 10.1.70.50
-
-  # VLAN 90 (guest). Like iot/management/security, dns01 doesn't sit on this
-  # VLAN itself - requests reach it relayed via OPNsense's VLAN 90 interface
-  # (IP Helper), not as direct broadcasts.
+  # VLAN 90 (guest). Like the other relayed scopes above, dns01 doesn't sit
+  # on this VLAN itself - requests reach it relayed via OPNsense's VLAN 90
+  # interface (IP Helper), not as direct broadcasts.
   - name: guest
     startingAddress: 10.1.90.50
     endingAddress: 10.1.90.250
