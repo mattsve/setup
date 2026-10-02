@@ -76,6 +76,11 @@ technitium_records:
     type: CNAME
     cname: reverse-proxy01.server.agb.ingenstans.se
     ttl: 3600
+  - name: hass.agb.ingenstans.se
+    zone: agb.ingenstans.se
+    type: CNAME
+    cname: reverse-proxy01.server.agb.ingenstans.se
+    ttl: 3600
   - name: k9.agb.ingenstans.se
     zone: agb.ingenstans.se
     type: CNAME

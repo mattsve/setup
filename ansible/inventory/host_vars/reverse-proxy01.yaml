@@ -30,3 +30,6 @@ caddy_proxies:
     backend_scheme: https
     backend_tls_insecure: true
     backend_host_header: true
+  - hostname: hass.agb.ingenstans.se
+    backend: "[fd01:eae3:bc39:100:1d94:69a8:2490:2533]:8123"
+    backend_scheme: http
