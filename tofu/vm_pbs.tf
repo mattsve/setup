@@ -1,6 +1,6 @@
 # Proxmox Backup Server. Adopted via `tofu import proxmox_virtual_environment_vm.pbs pve1/102`,
-# not created by Tofu: it was installed by hand from the PBS ISO (still attached
-# as ide2, hence the boot order below), so there's no source image to
+# not created by Tofu: it was installed by hand from the PBS ISO (since
+# ejected, leaving an empty ide2 drive), so there's no source image to
 # import_from. This file documents its settings and surfaces drift in
 # `tofu plan`. If it ever needs recreating, restore it from backup (qmrestore)
 # rather than applying this - Tofu would only produce an empty VM of the right
@@ -14,7 +14,7 @@ resource "proxmox_virtual_environment_vm" "pbs" {
 
   bios          = "ovmf"
   scsi_hardware = "virtio-scsi-single"
-  boot_order    = ["scsi0", "ide2", "net0"]
+  boot_order    = ["scsi0"]
 
   agent {
     enabled = true
@@ -60,7 +60,7 @@ resource "proxmox_virtual_environment_vm" "pbs" {
   lifecycle {
     prevent_destroy = true
     # Disk content isn't reproducible from Tofu (restored from backup), and
-    # the installer ISO is a leftover that doesn't need to be tracked.
+    # the empty cdrom drive doesn't need to be tracked.
     ignore_changes = [disk, efi_disk, cdrom]
   }
 }
