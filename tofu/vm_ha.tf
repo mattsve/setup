@@ -40,10 +40,12 @@ resource "proxmox_virtual_environment_vm" "ha" {
     iothread     = true
   }
 
-  # Pinned MAC (migrated from the old system). Tagged VLAN 100.
+  # Pinned MAC (migrated from the old system). On VLAN 50 with the other
+  # servers; DHCP/SLAAC (EUI-64) is configured inside HAOS, not here.
+  # ULA: fd01:eae3:bc39:32:216:3eff:fe3e:6e31
   network_device {
     bridge      = "vmbr0"
-    vlan_id     = 100
+    vlan_id     = 50
     mac_address = "00:16:3e:3e:6e:31"
   }
 
