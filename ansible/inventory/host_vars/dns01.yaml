@@ -16,22 +16,23 @@ technitium_zones:
   # guests that can't reach OPNsense/AdGuard for these names.
   - zone: hem.ingenstans.se
     type: Primary
-  # Independent Primary zone, not delegated - no NS delegation needed since
-  # this same Technitium instance is authoritative for both. DHCP leases
-  # auto-register here (dnsUpdates below).
-  - zone: server.agb.ingenstans.se
+
+  # One zone per VLAN, ordered by VLAN number. Each is its own Primary zone
+  # rather than a delegated child of agb.ingenstans.se (this instance is
+  # authoritative for all of them, so no NS records are needed), and each
+  # VLAN's DHCP leases auto-register in its own zone (dnsUpdates below), which
+  # keeps e.g. IoT hosts out of the general-server namespace.
+  - zone: management.agb.ingenstans.se # VLAN 10
     type: Primary
-  - zone: management.agb.ingenstans.se
+  - zone: storage.agb.ingenstans.se # VLAN 20
     type: Primary
-  # VLAN 80 (IoT): its own namespace rather than sharing server.agb.ingenstans.se,
-  # so IoT leases stay out of the general-server namespace.
-  - zone: iot.agb.ingenstans.se
+  - zone: server.agb.ingenstans.se # VLAN 50
     type: Primary
-  # VLAN 70 (security): same reasoning as iot.agb.ingenstans.se above.
-  - zone: security.agb.ingenstans.se
+  - zone: security.agb.ingenstans.se # VLAN 70
     type: Primary
-  # VLAN 90 (guest): same reasoning as iot.agb.ingenstans.se above.
-  - zone: guest.agb.ingenstans.se
+  - zone: iot.agb.ingenstans.se # VLAN 80
+    type: Primary
+  - zone: guest.agb.ingenstans.se # VLAN 90
     type: Primary
 
 # hem.ingenstans.se excluded - being retired, not worth signing.
@@ -39,12 +40,13 @@ technitium_dnssec_zones:
   - agb.ingenstans.se
   - server.agb.ingenstans.se
   - management.agb.ingenstans.se
+  - storage.agb.ingenstans.se
   - iot.agb.ingenstans.se
   - security.agb.ingenstans.se
   - guest.agb.ingenstans.se
 
-# Friendly agb.ingenstans.se names as CNAMEs into server.agb.ingenstans.se,
-# since the backing hosts are DHCP-addressed there rather than static.
+# Friendly agb.ingenstans.se names as CNAMEs into the per-VLAN zones, since
+# most backing hosts are DHCP-addressed and have no fixed address to point at.
 technitium_records:
   - name: plex.agb.ingenstans.se
     zone: agb.ingenstans.se
@@ -92,8 +94,8 @@ technitium_records:
     cname: keba-p30.security.agb.ingenstans.se
     ttl: 3600
 
-  # dns01 itself is static, not a DHCP lease, so it gets no auto-registered
-  # record from the server scope's dnsUpdates - added by hand instead.
+  # Static hosts (dns01, pve01, pbs01) aren't DHCP leases, so dnsUpdates never
+  # registers them - their A/AAAA records are added by hand.
   - name: dns01.server.agb.ingenstans.se
     zone: server.agb.ingenstans.se
     type: A
@@ -105,9 +107,9 @@ technitium_records:
     ipAddress: fd01:eae3:bc39:32:be24:11ff:fe7d:ccf0
     ttl: 3600
 
-  # AAAA records are added by hand for every host below: dnsUpdates only
-  # auto-registers the DHCP lease's A record, and IPv6 is SLAAC-derived, not
-  # DHCP-assigned (see CLAUDE.md's IPv6 addressing section).
+  # DHCP-addressed hosts: only the AAAA is added by hand. dnsUpdates registers
+  # the lease's A record, but IPv6 is SLAAC-derived, not DHCP-assigned (see
+  # CLAUDE.md's IPv6 addressing section).
   - name: reverse-proxy01.server.agb.ingenstans.se
     zone: server.agb.ingenstans.se
     type: AAAA
@@ -140,10 +142,12 @@ technitium_records:
     cname: pve01.management.agb.ingenstans.se
     ttl: 3600
   - name: pbs01.management.agb.ingenstans.se
+    zone: management.agb.ingenstans.se
     type: A
     ipAddress: 10.1.10.3
     ttl: 3600
   - name: pbs01.management.agb.ingenstans.se
+    zone: management.agb.ingenstans.se
     type: AAAA
     ipAddress: fd01:eae3:bc39:a:be24:11ff:fea5:71cb
     ttl: 3600
@@ -166,19 +170,20 @@ technitium_block_list_urls:
 # One scope per VLAN, ordered by VLAN number. .2-.49 held back for
 # infra/static assignments.
 technitium_dhcp_scopes:
-  # VLAN 10 (management). dns01 doesn't sit on this VLAN itself - requests
-  # reach it relayed via OPNsense's VLAN 10 interface (IP Helper), not as
-  # direct broadcasts.
+  # VLANs other than 50 (where dns01 itself sits) are relayed: requests reach
+  # dns01 via OPNsense's per-VLAN IP Helper, not as direct broadcasts.
+
+  # VLAN 10 (management).
   - name: management
     startingAddress: 10.1.10.50
     endingAddress: 10.1.10.250
     subnetMask: 255.255.255.0
     routerAddress: 10.1.10.1
     domainName: management.agb.ingenstans.se
-    # domainName alone (DHCP option 15) is also what clients got as their
-    # search domain, so they searched server.agb.ingenstans.se rather than
-    # the friendlier agb.ingenstans.se - domainSearchList (option 119) is
-    # the separate, client-facing search-suffix list.
+    # domainName alone (DHCP option 15) is also what clients used as their
+    # search domain, so they'd search only this VLAN's zone rather than the
+    # friendlier agb.ingenstans.se - domainSearchList (option 119) is the
+    # separate, client-facing search-suffix list. Same split on every scope.
     domainSearchList:
       - agb.ingenstans.se
     dnsUpdates: true
@@ -191,17 +196,28 @@ technitium_dhcp_scopes:
         hardwareAddress: "3C:EC:EF:95:EF:5A"
         address: 10.1.10.51
 
+  # VLAN 20 (storage).
+  - name: storage
+    startingAddress: 10.1.20.50
+    endingAddress: 10.1.20.250
+    subnetMask: 255.255.255.0
+    routerAddress: 10.1.20.1
+    domainName: storage.agb.ingenstans.se
+    domainSearchList:
+      - agb.ingenstans.se
+    dnsUpdates: true
+    useThisDnsServer: true
+
+  # VLAN 50 (server). Direct broadcasts, no relay.
   - name: server
     startingAddress: 10.1.50.50
     endingAddress: 10.1.50.250
     subnetMask: 255.255.255.0
     routerAddress: 10.1.50.1
-    # Auto-registers an A/PTR record per lease under server.agb.ingenstans.se.
-    # If leases aren't showing up, check the zone's own Dynamic Updates
-    # setting in the Technitium console too - this scope option alone may
-    # not be enough.
+    # dnsUpdates registers an A/PTR record per lease under this zone. If
+    # leases aren't showing up, check the zone's own Dynamic Updates setting
+    # in the Technitium console too - the scope option alone may not be enough.
     domainName: server.agb.ingenstans.se
-    # Same domainName/domainSearchList split as the management scope above.
     domainSearchList:
       - agb.ingenstans.se
     dnsUpdates: true
@@ -212,16 +228,13 @@ technitium_dhcp_scopes:
     # silently dropped.
     useThisDnsServer: true
 
-  # VLAN 70 (security). Like management, dns01 doesn't sit on this VLAN
-  # itself - requests reach it relayed via OPNsense's VLAN 70 interface (IP
-  # Helper), not as direct broadcasts.
+  # VLAN 70 (security).
   - name: security
     startingAddress: 10.1.70.50
     endingAddress: 10.1.70.250
     subnetMask: 255.255.255.0
     routerAddress: 10.1.70.1
     domainName: security.agb.ingenstans.se
-    # Same domainName/domainSearchList split as the other scopes above.
     domainSearchList:
       - agb.ingenstans.se
     dnsUpdates: true
@@ -231,16 +244,13 @@ technitium_dhcp_scopes:
         hardwareAddress: "00:60:B5:4E:2E:07"
         address: 10.1.70.50
 
-  # VLAN 80 (IoT). Unlike the server scope above, dns01 doesn't sit on this
-  # VLAN itself - requests reach it relayed via OPNsense's VLAN 80 interface
-  # (see tofu/firewall_dns.tf), not as direct broadcasts.
+  # VLAN 80 (IoT). See tofu/firewall_dns.tf for the firewall side of relaying.
   - name: iot
     startingAddress: 10.1.80.50
     endingAddress: 10.1.80.250
     subnetMask: 255.255.255.0
     routerAddress: 10.1.80.1
     domainName: iot.agb.ingenstans.se
-    # Same domainName/domainSearchList split as the other scopes above.
     domainSearchList:
       - agb.ingenstans.se
     dnsUpdates: true
@@ -265,16 +275,13 @@ technitium_dhcp_scopes:
         hardwareAddress: "BC:FF:4D:4F:42:1E"
         address: 10.1.80.59
 
-  # VLAN 90 (guest). Like the other relayed scopes above, dns01 doesn't sit
-  # on this VLAN itself - requests reach it relayed via OPNsense's VLAN 90
-  # interface (IP Helper), not as direct broadcasts.
+  # VLAN 90 (guest).
   - name: guest
     startingAddress: 10.1.90.50
     endingAddress: 10.1.90.250
     subnetMask: 255.255.255.0
     routerAddress: 10.1.90.1
     domainName: guest.agb.ingenstans.se
-    # Same domainName/domainSearchList split as the other scopes above.
     domainSearchList:
       - agb.ingenstans.se
     dnsUpdates: true
