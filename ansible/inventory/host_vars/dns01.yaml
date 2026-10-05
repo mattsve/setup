@@ -171,6 +171,10 @@ technitium_records:
     type: AAAA
     ipAddress: fd01:eae3:bc39:100:211:32ff:fede:d68d
     ttl: 3600
+  - name: files.hem.ingenstans.se
+    zone: hem.ingenstans.se
+    type: CNAME
+    cname: l-space.hem.ingenstans.se
 
 technitium_apps:
   - name: Query Logs (Sqlite)
