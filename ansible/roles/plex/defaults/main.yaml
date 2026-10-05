@@ -6,7 +6,7 @@ plex_apt_repo_uri: "https://repo.plex.tv/deb"
 
 # Samba media share, mounted read-only. Credentials supplied via
 # group_vars/plex.yaml (op://private/l-space/...).
-plex_media_share: "//l-space.hem.ingenstans.se/data/media"
+plex_media_share: "//files.agb.ingenstans.se/data/media"
 plex_media_mount_point: "/mnt/media"
 plex_samba_username: ""
 plex_samba_password: ""
