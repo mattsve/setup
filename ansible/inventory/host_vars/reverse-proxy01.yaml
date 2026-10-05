@@ -17,6 +17,9 @@ caddy_proxies:
     backend_tls_insecure: true
   - hostname: pulse.hem.ingenstans.se
     backend: "[fd01:eae3:bc39:32:be24:11ff:fef7:4b74]:7655"
+  - hostname: hass.hem.ingenstans.se
+    backend: "[fd01:eae3:bc39:32:216:3eff:fe3e:6e31]:8123"
+    backend_scheme: http
   - hostname: plex.agb.ingenstans.se
     backend: "[fd01:eae3:bc39:32:be24:11ff:fe82:633b]:32400"
   - hostname: pve.agb.ingenstans.se
@@ -31,8 +34,5 @@ caddy_proxies:
     backend_tls_insecure: true
     backend_host_header: true
   - hostname: hass.agb.ingenstans.se
-    backend: "[fd01:eae3:bc39:32:216:3eff:fe3e:6e31]:8123"
-    backend_scheme: http
-  - hostname: hass.hem.ingenstans.se
     backend: "[fd01:eae3:bc39:32:216:3eff:fe3e:6e31]:8123"
     backend_scheme: http
