@@ -93,12 +93,10 @@ technitium_records:
     type: CNAME
     cname: keba-p30.security.agb.ingenstans.se
     ttl: 3600
-  # Points at l-space's current LAN name; re-point once it moves to the
-  # storage VLAN.
   - name: files.agb.ingenstans.se
     zone: agb.ingenstans.se
     type: CNAME
-    cname: l-space.hem.ingenstans.se
+    cname: l-space.storage.agb.ingenstans.se
     ttl: 3600
 
   # Static hosts (dns01, pve01, pbs01) aren't DHCP leases, so dnsUpdates never
@@ -159,22 +157,24 @@ technitium_records:
     ipAddress: fd01:eae3:bc39:a:be24:11ff:fea5:71cb
     ttl: 3600
 
-  # l-space is LAN-only (static, not Technitium-managed) - mirrored by hand
-  # so plex01's Samba mount can resolve it from VLAN 50.
-  - name: l-space.hem.ingenstans.se
-    zone: hem.ingenstans.se
-    type: A
-    ipAddress: 10.0.0.3
-    ttl: 3600
-  - name: l-space.hem.ingenstans.se
-    zone: hem.ingenstans.se
+  # l-space lives on the storage VLAN (static lease in the storage scope, so
+  # dnsUpdates registers its A record); only the AAAA is added by hand,
+  # SLAAC EUI-64 from its MAC (VLAN 20 -> /64 ...:14::/64).
+  - name: l-space.storage.agb.ingenstans.se
+    zone: storage.agb.ingenstans.se
     type: AAAA
-    ipAddress: fd01:eae3:bc39:100:211:32ff:fede:d68d
+    ipAddress: fd01:eae3:bc39:14:211:32ff:fede:d68d
+    ttl: 3600
+
+  - name: l-space.hem.ingenstans.se
+    zone: hem.ingenstans.se
+    type: CNAME
+    cname: l-space.storage.agb.ingenstans.se
     ttl: 3600
   - name: files.hem.ingenstans.se
     zone: hem.ingenstans.se
     type: CNAME
-    cname: l-space.hem.ingenstans.se
+    cname: l-space.storage.agb.ingenstans.se
 
 technitium_apps:
   - name: Query Logs (Sqlite)
@@ -223,6 +223,10 @@ technitium_dhcp_scopes:
       - agb.ingenstans.se
     dnsUpdates: true
     useThisDnsServer: true
+    reservedLeases:
+      - hostName: l-space
+        hardwareAddress: "00:11:32:DE:D6:8D"
+        address: 10.1.20.50
 
   # VLAN 50 (server). Direct broadcasts, no relay.
   - name: server
