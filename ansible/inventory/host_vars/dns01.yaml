@@ -34,6 +34,8 @@ technitium_zones:
     type: Primary
   - zone: guest.agb.ingenstans.se # VLAN 90
     type: Primary
+  - zone: main.agb.ingenstans.se # VLAN 100
+    type: Primary
 
 # hem.ingenstans.se excluded - being retired, not worth signing.
 technitium_dnssec_zones:
@@ -44,6 +46,7 @@ technitium_dnssec_zones:
   - iot.agb.ingenstans.se
   - security.agb.ingenstans.se
   - guest.agb.ingenstans.se
+  - main.agb.ingenstans.se
 
 # Friendly agb.ingenstans.se names as CNAMEs into the per-VLAN zones, since
 # most backing hosts are DHCP-addressed and have no fixed address to point at.
@@ -302,6 +305,18 @@ technitium_dhcp_scopes:
     subnetMask: 255.255.255.0
     routerAddress: 10.1.90.1
     domainName: guest.agb.ingenstans.se
+    domainSearchList:
+      - agb.ingenstans.se
+    dnsUpdates: true
+    useThisDnsServer: true
+
+  # VLAN 100 (main).
+  - name: main
+    startingAddress: 10.1.100.50
+    endingAddress: 10.1.100.250
+    subnetMask: 255.255.255.0
+    routerAddress: 10.1.100.1
+    domainName: main.agb.ingenstans.se
     domainSearchList:
       - agb.ingenstans.se
     dnsUpdates: true

@@ -74,7 +74,7 @@ resource "proxmox_virtual_environment_firewall_rules" "dns" {
     action  = "ACCEPT"
     proto   = "tcp"
     dport   = "53443"
-    source  = "10.0.0.0/22"
+    source  = "10.0.0.0/22,10.1.100.0/24"
     comment = "Technitium web console (HTTPS) - LAN/main only"
   }
 
@@ -87,7 +87,7 @@ resource "proxmox_virtual_environment_firewall_rules" "dns" {
     action  = "ACCEPT"
     proto   = "tcp"
     dport   = "53443"
-    source  = "fd01:eae3:bc39:100::/64"
+    source  = "fd01:eae3:bc39:100::/64,fd01:eae3:bc39:64::/64"
     comment = "Technitium web console (HTTPS, IPv6/ULA) - LAN/main only"
   }
 }
