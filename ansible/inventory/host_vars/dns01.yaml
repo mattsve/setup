@@ -76,6 +76,11 @@ technitium_records:
     type: CNAME
     cname: mqtt01.server.agb.ingenstans.se
     ttl: 3600
+  - name: opnsense.agb.ingenstans.se
+    zone: agb.ingenstans.se
+    type: CNAME
+    cname: opnsense.management.agb.ingenstans.se
+    ttl: 3600
   - name: unifi.agb.ingenstans.se
     zone: agb.ingenstans.se
     type: CNAME
@@ -158,6 +163,17 @@ technitium_records:
     zone: management.agb.ingenstans.se
     type: AAAA
     ipAddress: fd01:eae3:bc39:a:be24:11ff:fea5:71cb
+    ttl: 3600
+  # OPNsense's own address on the management VLAN (the gateway).
+  - name: opnsense.management.agb.ingenstans.se
+    zone: management.agb.ingenstans.se
+    type: A
+    ipAddress: 10.1.10.1
+    ttl: 3600
+  - name: opnsense.management.agb.ingenstans.se
+    zone: management.agb.ingenstans.se
+    type: AAAA
+    ipAddress: fd01:eae3:bc39:a::1
     ttl: 3600
 
   # l-space lives on the storage VLAN (static lease in the storage scope, so
