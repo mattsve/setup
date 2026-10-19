@@ -1,0 +1,16 @@
+---
+plugin: community.proxmox.proxmox
+url: https://pve01.management.agb.ingenstans.se:8006
+user: root@pam
+token_id: ansible
+# One env var per cluster (see .env): the plugin's built-in PROXMOX_TOKEN_SECRET
+# fallback is a single name, which can't serve two clusters at once.
+token_secret: "{{ lookup('ansible.builtin.env', 'PROXMOX_TOKEN_SECRET_AGB_PVE') }}"
+validate_certs: true
+want_facts: true
+groups:
+  cluster_agb_pve: "true"
+keyed_groups:
+  - key: proxmox_tags_parsed
+    separator: ""
+    prefix: proxmox_tags_
