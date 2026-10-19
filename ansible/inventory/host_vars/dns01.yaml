@@ -337,3 +337,20 @@ technitium_dhcp_scopes:
       - agb.ingenstans.se
     dnsUpdates: true
     useThisDnsServer: true
+
+  # LAN (192.168.1.0/24). Relayed like the other non-server VLANs. No zone, and
+  # dnsUpdates is explicitly off: Technitium defaults it to on when omitted.
+  - name: lan
+    startingAddress: 192.168.1.50
+    endingAddress: 192.168.1.250
+    subnetMask: 255.255.255.0
+    routerAddress: 192.168.1.1
+    dnsUpdates: false
+    useThisDnsServer: true
+    # Option 43 (vendor-specific info) for UniFi device adoption, sent only to
+    # clients whose vendor class is "ubnt". Sub-option 01, length 4, then the
+    # controller's IP (10.1.10.50 = 0A:01:0A:32, the cloudkey's reservation on
+    # the management scope).
+    vendorInfo:
+      - identifier: ubnt
+        information: "01:04:0A:01:0A:32"
