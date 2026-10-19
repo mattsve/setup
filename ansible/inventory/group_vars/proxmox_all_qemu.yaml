@@ -1,7 +1,7 @@
 ---
 # QEMU VMs aren't reachable via pct exec like LXC and have no DNS record, so
 # ansible_host is derived from qemu-guest-agent facts (want_facts: true in
-# inventory/proxmox.yaml): match the primary NIC's MAC (proxmox_net0) to the
+# inventory/<cluster>.proxmox.yaml): match the primary NIC's MAC (proxmox_net0) to the
 # interface it reports and take its IPv4 address. Generalizes to any future
 # VM automatically, as long as the guest agent is installed and running.
 ansible_host: >-
