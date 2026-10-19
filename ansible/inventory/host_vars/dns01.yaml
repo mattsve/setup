@@ -142,17 +142,42 @@ technitium_records:
   - name: pve01.management.agb.ingenstans.se
     zone: management.agb.ingenstans.se
     type: A
-    ipAddress: 10.1.10.2
+    ipAddress: 10.1.10.11
     ttl: 3600
   - name: pve01.management.agb.ingenstans.se
     zone: management.agb.ingenstans.se
     type: AAAA
-    ipAddress: fd01:eae3:bc39:a:3eec:efff:fe95:f0f8
+    ipAddress: fd01:eae3:bc39:a:caff:bfff:fe0b:6fd1
+    ttl: 3600
+  - name: pve02.management.agb.ingenstans.se
+    zone: management.agb.ingenstans.se
+    type: A
+    ipAddress: 10.1.10.12
+    ttl: 3600
+  - name: pve02.management.agb.ingenstans.se
+    zone: management.agb.ingenstans.se
+    type: AAAA
+    ipAddress: fd01:eae3:bc39:a:caff:bfff:fe0b:3562
+    ttl: 3600
+  - name: pve03.management.agb.ingenstans.se
+    zone: management.agb.ingenstans.se
+    type: A
+    ipAddress: 10.1.10.13
+    ttl: 3600
+  - name: pve03.management.agb.ingenstans.se
+    zone: management.agb.ingenstans.se
+    type: AAAA
+    ipAddress: fd01:eae3:bc39:a:caff:bfff:fe0b:3278
     ttl: 3600
   - name: pve1.management.agb.ingenstans.se
     zone: management.agb.ingenstans.se
-    type: CNAME
-    cname: pve01.management.agb.ingenstans.se
+    type: A
+    ipAddress: 10.1.10.2
+    ttl: 3600
+  - name: pve1.management.agb.ingenstans.se
+    zone: management.agb.ingenstans.se
+    type: AAAA
+    ipAddress: fd01:eae3:bc39:a:3eec:efff:fe95:f0f8
     ttl: 3600
   - name: pbs01.management.agb.ingenstans.se
     zone: management.agb.ingenstans.se
