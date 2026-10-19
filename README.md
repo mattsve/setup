@@ -65,7 +65,11 @@ IPs), that is the first place to look for a missing audit privilege.
 
 The `opentofu` token's roles are listed in the next section.
 
-## OpenTofu (`tofu/`)
+## OpenTofu (`tofu/<cluster>/`)
+
+One directory per Proxmox cluster (currently `tofu/pve1/`), each with its own
+provider, `.env`, lock file and state. Run `op run --env-file .env -- tofu plan`
+from inside the cluster's directory.
 
 The `opentofu` API token (`root@pam!opentofu`) authenticates as itself, separate
 from the `root@pam!ansible` token Ansible uses, so the two tools don't share
