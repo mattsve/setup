@@ -61,3 +61,19 @@ technitium:
 pulse:
   children:
     proxmox_tags_pulse:
+
+# Per-cluster groups. Each cluster's inventory plugin file (*.proxmox.yaml)
+# puts its guests in cluster_<name> via the plugin's `groups` option, but the
+# plugin adds nodes to the inventory through a different code path that skips
+# `groups`, so a node never lands in its cluster's group that way. Nodes are
+# listed by hand here instead (groups merge across inventory sources, so this
+# extends the plugin-created group); add a line when a node joins a cluster.
+cluster_pve1:
+  hosts:
+    pve1: {}
+
+cluster_agb_pve:
+  hosts:
+    pve01: {}
+    pve02: {}
+    pve03: {}
