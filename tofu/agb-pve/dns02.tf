@@ -18,7 +18,8 @@ module "dns02" {
   mac_address  = "BC:24:11:F8:DC:3C"
   ipv4_address = "10.1.50.3/24"
   ipv4_gateway = "10.1.50.1"
-  # Same AdGuard source-address quirk as dns01 (see lxc_dns.tf).
+  # Pinned to the VLAN 50 gateway for the same reason as dns01 (see
+  # tofu/pve1/lxc_dns.tf).
   dns_servers = ["10.1.50.1"]
 
   # Deliberately without "technitium" and "certbot" for now: those tags put

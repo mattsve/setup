@@ -66,7 +66,7 @@ resource "proxmox_virtual_environment_firewall_rules" "dns" {
     comment = "DNS-over-HTTPS"
   }
 
-  # Web console: LAN/main only, deliberately not even VLAN 50 - the one rule
+  # Web console: main (VLAN 100) only, deliberately not even VLAN 50 - the one rule
   # that can't move to OPNsense, since VLAN 50 traffic to dns01 never routes
   # through it.
   rule {
@@ -74,11 +74,11 @@ resource "proxmox_virtual_environment_firewall_rules" "dns" {
     action  = "ACCEPT"
     proto   = "tcp"
     dport   = "53443"
-    source  = "10.0.0.0/22,10.1.100.0/24"
-    comment = "Technitium web console (HTTPS) - LAN/main only"
+    source  = "10.1.100.0/24"
+    comment = "Technitium web console (HTTPS) - main (VLAN 100) only"
   }
 
-  # IPv6 counterpart, scoped to the LAN/main ULA /64 rather than its GUA
+  # IPv6 counterpart, scoped to the main (VLAN 100) ULA /64 rather than its GUA
   # range - clients get dns01 as their resolver via its ULA (RDNSS override,
   # see CLAUDE.md), and Proxmox's firewall rejects mixing IPv4/IPv6 in one
   # source list, so this can't just be folded into the rule above.
@@ -87,7 +87,7 @@ resource "proxmox_virtual_environment_firewall_rules" "dns" {
     action  = "ACCEPT"
     proto   = "tcp"
     dport   = "53443"
-    source  = "fd01:eae3:bc39:100::/64,fd01:eae3:bc39:64::/64"
-    comment = "Technitium web console (HTTPS, IPv6/ULA) - LAN/main only"
+    source  = "fd01:eae3:bc39:64::/64"
+    comment = "Technitium web console (HTTPS, IPv6/ULA) - main (VLAN 100) only"
   }
 }

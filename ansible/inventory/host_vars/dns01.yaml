@@ -12,8 +12,8 @@ technitium_domain: dns.agb.ingenstans.se
 technitium_zones:
   - zone: agb.ingenstans.se
     type: Primary
-  # Being retired in favor of agb.ingenstans.se, but still needed by VLAN 50
-  # guests that can't reach OPNsense/AdGuard for these names.
+  # Being retired in favor of agb.ingenstans.se, but still served for
+  # backwards compatibility.
   - zone: hem.ingenstans.se
     type: Primary
 
@@ -285,9 +285,9 @@ technitium_dhcp_scopes:
     domainSearchList:
       - agb.ingenstans.se
     dnsUpdates: true
-    # Without this, clients got Technitium's own default DNS option
-    # (10.0.0.1, AdGuard's LAN address), which is unreachable the same way
-    # dns01's own resolver was (see lxc_dns.tf): AdGuard replies from a
+    # Without this, clients got Technitium's own default DNS option (a
+    # stale OPNsense address), which is unreachable the same way dns01's own
+    # resolver was (see lxc_dns.tf): OPNsense's resolver replies from a
     # different source address than the one queried, so the reply gets
     # silently dropped.
     useThisDnsServer: true

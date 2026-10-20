@@ -2,7 +2,7 @@
 technitium_install_script_url: "https://download.technitium.com/dns/install.sh"
 
 # Tasks run on dns01 itself (pct exec), so this is reachable on localhost
-# regardless of the guest's LAN address. No port - the collection's modules
+# regardless of the guest's address. No port - the collection's modules
 # append their own api_port (default 5380) to this URL.
 technitium_api_url: "http://localhost"
 
@@ -20,7 +20,7 @@ technitium_zones: []
 #   - name: plex.hem.ingenstans.se
 #     zone: hem.ingenstans.se
 #     type: A
-#     ipAddress: 10.0.2.5
+#     ipAddress: 10.1.50.61
 technitium_records: []
 
 # dns01 is tagged certbot (tofu/lxc_dns.tf) and holds its own cert rather
@@ -68,10 +68,10 @@ technitium_apps: []
 
 # One scope per VLAN, supplied per host in host_vars/dns01.yaml, e.g.:
 #   - name: iot
-#     startingAddress: 10.0.20.10
-#     endingAddress: 10.0.20.250
+#     startingAddress: 10.1.80.10
+#     endingAddress: 10.1.80.250
 #     subnetMask: 255.255.255.0
-#     routerAddress: 10.0.20.1
+#     routerAddress: 10.1.80.1
 # New scopes are created disabled by Technitium's API, so this role
 # explicitly enables each one after setting it up.
 technitium_dhcp_scopes: []
