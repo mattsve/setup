@@ -1,2 +1,7 @@
 ---
 technitium_api_token: "{{ lookup('community.general.onepassword', 'op://agb/dns/ansible-api-token') }}"
+
+# Only referenced by a cluster secondary joining its primary (the join call
+# takes an administrator login, not an API token).
+technitium_cluster_admin_username: "{{ lookup('community.general.onepassword', 'op://agb/dns/username') }}"
+technitium_cluster_admin_password: "{{ lookup('community.general.onepassword', 'op://agb/dns/password') }}"

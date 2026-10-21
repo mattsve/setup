@@ -22,11 +22,9 @@ module "dns02" {
   # tofu/pve1/lxc_dns.tf).
   dns_servers = ["10.1.50.1"]
 
-  # Deliberately without "technitium" and "certbot" for now: those tags put
-  # the guest straight into the technitium/certbot groups, and host_vars/
-  # dns02.yaml (certbot_domains, zones, ...) doesn't exist yet - without it
-  # certbot would request a cert for the retired <host>.hem.ingenstans.se.
-  tags = ["managed-updates", "autologin"]
+  # technitium + certbot: host_vars/dns02.yaml (cert names, cluster join)
+  # exists now, so the guest can be configured as dns01's cluster secondary.
+  tags = ["managed-updates", "autologin", "technitium", "certbot"]
 
   # Other guests depend on DNS being up, so hold order=2 guests back until
   # it's listening. (dns02 doesn't serve DHCP, unlike dns01.)
@@ -64,6 +62,21 @@ module "dns02" {
       dport   = "53443"
       source  = "fd01:eae3:bc39:64::/64"
       comment = "Technitium web console (HTTPS, IPv6/ULA) - main (VLAN 100) only"
+    },
+    # Cluster traffic: dns01 (the primary) calls dns02's web service to sync
+    # and for heartbeats. Same VLAN, so it never transits OPNsense - only a
+    # host rule can allow it. Both families, as the node name has an A and AAAA.
+    {
+      proto   = "tcp"
+      dport   = "53443"
+      source  = "10.1.50.2"
+      comment = "Technitium cluster - dns01 (IPv4)"
+    },
+    {
+      proto   = "tcp"
+      dport   = "53443"
+      source  = "fd01:eae3:bc39:32:be24:11ff:fe7d:ccf0"
+      comment = "Technitium cluster - dns01 (IPv6/ULA)"
     },
   ]
 

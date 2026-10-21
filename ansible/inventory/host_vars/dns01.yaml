@@ -9,6 +9,25 @@ certbot_domains:
   - dns01.server.agb.ingenstans.se
 technitium_domain: dns.agb.ingenstans.se
 
+# Cluster primary: owns all zones/records/DHCP/blocking, dns02 syncs from it.
+technitium_cluster_role: primary
+technitium_cluster_domain: dns.agb.ingenstans.se
+technitium_node_domain: dns01.server.agb.ingenstans.se
+# Created by Technitium itself (PTR records for DHCP leases), so not in
+# technitium_zones, but they need to be in the cluster catalog to replicate.
+technitium_cluster_extra_zones:
+  - 10.1.10.in-addr.arpa
+  - 20.1.10.in-addr.arpa
+  - 50.1.10.in-addr.arpa
+  - 70.1.10.in-addr.arpa
+  - 80.1.10.in-addr.arpa
+  - 90.1.10.in-addr.arpa
+  - 100.1.10.in-addr.arpa
+technitium_node_ip_addresses:
+  - 10.1.50.2
+  # ULA, not GUA: the GUA half moves if the ISP's delegation renumbers.
+  - fd01:eae3:bc39:32:be24:11ff:fe7d:ccf0
+
 technitium_zones:
   - zone: agb.ingenstans.se
     type: Primary
@@ -66,11 +85,6 @@ technitium_records:
     type: CNAME
     cname: reverse-proxy01.server.agb.ingenstans.se
     ttl: 3600
-  - name: dns.agb.ingenstans.se
-    zone: agb.ingenstans.se
-    type: CNAME
-    cname: dns01.server.agb.ingenstans.se
-    ttl: 3600
   - name: mqtt.agb.ingenstans.se
     zone: agb.ingenstans.se
     type: CNAME
@@ -118,6 +132,17 @@ technitium_records:
     zone: server.agb.ingenstans.se
     type: AAAA
     ipAddress: fd01:eae3:bc39:32:be24:11ff:fe7d:ccf0
+    ttl: 3600
+
+  - name: dns02.server.agb.ingenstans.se
+    zone: server.agb.ingenstans.se
+    type: A
+    ipAddress: 10.1.50.3
+    ttl: 3600
+  - name: dns02.server.agb.ingenstans.se
+    zone: server.agb.ingenstans.se
+    type: AAAA
+    ipAddress: fd01:eae3:bc39:32:be24:11ff:fef8:dc3c
     ttl: 3600
 
   # DHCP-addressed hosts: only the AAAA is added by hand. dnsUpdates registers
@@ -227,6 +252,13 @@ technitium_apps:
 technitium_block_list_urls:
   - https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/multi-onlydomains.txt
 
+# Handed out to DHCP clients on every scope, dns01 first so it stays the
+# preferred resolver and dns02 (the cluster secondary) is the failover.
+# Explicit rather than useThisDnsServer, which would hand out only dns01.
+technitium_dhcp_dns_servers:
+  - 10.1.50.2
+  - 10.1.50.3
+
 # One scope per VLAN, ordered by VLAN number. .2-.49 held back for
 # infra/static assignments.
 technitium_dhcp_scopes:
@@ -247,7 +279,8 @@ technitium_dhcp_scopes:
     domainSearchList:
       - agb.ingenstans.se
     dnsUpdates: true
-    useThisDnsServer: true
+    useThisDnsServer: false
+    dnsServers: "{{ technitium_dhcp_dns_servers }}"
     reservedLeases:
       - hostName: cloudkey
         hardwareAddress: "24:5A:4C:8F:72:4D"
@@ -266,7 +299,8 @@ technitium_dhcp_scopes:
     domainSearchList:
       - agb.ingenstans.se
     dnsUpdates: true
-    useThisDnsServer: true
+    useThisDnsServer: false
+    dnsServers: "{{ technitium_dhcp_dns_servers }}"
     reservedLeases:
       - hostName: l-space
         hardwareAddress: "00:11:32:DE:D6:8D"
@@ -285,12 +319,13 @@ technitium_dhcp_scopes:
     domainSearchList:
       - agb.ingenstans.se
     dnsUpdates: true
-    # Without this, clients got Technitium's own default DNS option (a
+    # Explicit servers rather than Technitium's own default DNS option (a
     # stale OPNsense address), which is unreachable the same way dns01's own
     # resolver was (see lxc_dns.tf): OPNsense's resolver replies from a
     # different source address than the one queried, so the reply gets
     # silently dropped.
-    useThisDnsServer: true
+    useThisDnsServer: false
+    dnsServers: "{{ technitium_dhcp_dns_servers }}"
 
   # VLAN 70 (security).
   - name: security
@@ -302,7 +337,8 @@ technitium_dhcp_scopes:
     domainSearchList:
       - agb.ingenstans.se
     dnsUpdates: true
-    useThisDnsServer: true
+    useThisDnsServer: false
+    dnsServers: "{{ technitium_dhcp_dns_servers }}"
     reservedLeases:
       - hostName: keba-p30
         hardwareAddress: "00:60:B5:4E:2E:07"
@@ -318,7 +354,8 @@ technitium_dhcp_scopes:
     domainSearchList:
       - agb.ingenstans.se
     dnsUpdates: true
-    useThisDnsServer: true
+    useThisDnsServer: false
+    dnsServers: "{{ technitium_dhcp_dns_servers }}"
     reservedLeases:
       - hostName: slzb-mr3
         hardwareAddress: "88:57:21:6B:D6:C7"
@@ -349,7 +386,8 @@ technitium_dhcp_scopes:
     domainSearchList:
       - agb.ingenstans.se
     dnsUpdates: true
-    useThisDnsServer: true
+    useThisDnsServer: false
+    dnsServers: "{{ technitium_dhcp_dns_servers }}"
 
   # VLAN 100 (main).
   - name: main
@@ -361,7 +399,8 @@ technitium_dhcp_scopes:
     domainSearchList:
       - agb.ingenstans.se
     dnsUpdates: true
-    useThisDnsServer: true
+    useThisDnsServer: false
+    dnsServers: "{{ technitium_dhcp_dns_servers }}"
 
   # LAN (192.168.1.0/24). Relayed like the other non-server VLANs. No zone, and
   # dnsUpdates is explicitly off: Technitium defaults it to on when omitted.
@@ -371,7 +410,8 @@ technitium_dhcp_scopes:
     subnetMask: 255.255.255.0
     routerAddress: 192.168.1.1
     dnsUpdates: false
-    useThisDnsServer: true
+    useThisDnsServer: false
+    dnsServers: "{{ technitium_dhcp_dns_servers }}"
     # Option 43 (vendor-specific info) for UniFi device adoption, sent only to
     # clients whose vendor class is "ubnt". Sub-option 01, length 4, then the
     # controller's IP (10.1.10.50 = 0A:01:0A:32, the cloudkey's reservation on

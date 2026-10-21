@@ -1,0 +1,22 @@
+---
+# Cluster secondary of dns01: joins it and has zones, records, blocking, apps
+# and settings synced from it, so none of those are defined here.
+certbot_domains:
+  - dns02.server.agb.ingenstans.se
+  # The cluster domain, shared web-console name for both nodes.
+  - dns.agb.ingenstans.se
+technitium_domain: dns02.server.agb.ingenstans.se
+
+# Separate token: it's generated on dns02's own console before the join, since
+# the join call itself needs an authenticated API on dns02.
+technitium_api_token: "{{ lookup('community.general.onepassword', 'op://agb/dns/dns02-ansible-api-token') }}"
+
+technitium_cluster_role: secondary
+technitium_node_domain: dns02.server.agb.ingenstans.se
+technitium_node_ip_addresses:
+  - 10.1.50.3
+  # ULA, not GUA: the GUA half moves if the ISP's delegation renumbers.
+  - fd01:eae3:bc39:32:be24:11ff:fef8:dc3c
+# By address as well as name: dns01.server... has both an A and a ULA AAAA.
+technitium_cluster_primary_url: https://dns01.server.agb.ingenstans.se:53443/
+technitium_cluster_primary_ip: 10.1.50.2

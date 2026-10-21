@@ -71,22 +71,6 @@
   when: technitium_tls_enabled | bool
   tags: technitium_cert
 
-- name: Ensure Technitium DNS zones
-  effectivelywild.technitium_dns.technitium_dns_zone:
-    "{{ {'api_url': technitium_api_url, 'api_token': technitium_api_token, 'state': 'present'} | combine(item) }}"
-  loop: "{{ technitium_zones }}"
-  loop_control:
-    label: "{{ item.zone }}"
-  tags: technitium_zones
-
-- name: Ensure Technitium DNS records
-  effectivelywild.technitium_dns.technitium_dns_record:
-    "{{ {'api_url': technitium_api_url, 'api_token': technitium_api_token, 'state': 'present'} | combine(item) }}"
-  loop: "{{ technitium_records }}"
-  loop_control:
-    label: "{{ item.name }}"
-  tags: technitium_records
-
 - name: Configure Technitium web console and encrypted DNS protocols
   effectivelywild.technitium_dns.technitium_dns_set_server_settings:
     api_url: "{{ technitium_api_url }}"
@@ -106,95 +90,238 @@
   when: technitium_tls_enabled | bool
   tags: technitium_tls_settings
 
-- name: Get current DNSSEC status for zones to sign
-  effectivelywild.technitium_dns.technitium_dns_get_dnssec_properties:
-    api_url: "{{ technitium_api_url }}"
-    api_token: "{{ technitium_api_token }}"
-    zone: "{{ item }}"
-  loop: "{{ technitium_dnssec_zones }}"
-  register: technitium_dnssec_status
-  tags: technitium_dnssec
+# Clustering (Technitium v14+). The primary owns all config (zones, records,
+# DNSSEC, blocking, apps, settings); a secondary joins and has that synced
+# onto it, which is why the zone/record/etc. tasks below are skipped there. Every task here is
+# a no-op unless technitium_cluster_role is set. Runs before the zone/record
+# tasks because init creates the cluster zone that records may live in.
+# Everything below talks to Technitium's API over HTTPS from the controller
+# (one request per call) rather than through `pct exec` on the guest, which
+# costs a connection plus a module transfer per call and made the record loop
+# painfully slow. The TLS settings task above stays on the in-container
+# localhost path since it is what turns HTTPS on in the first place.
+#
+# That remote path can't always work: on a rebuilt dns01 or a new dns02 the
+# node's name doesn't resolve yet (this very play creates the record), and a
+# controller outside the main VLAN can't reach the port at all. So the HTTPS
+# endpoint is probed first and the block falls back to localhost via the
+# guest, which is slower but always works.
+- name: Probe the HTTPS API from the controller
+  # Also covers the web service needing a moment to listen after the TLS
+  # settings call above.
+  ansible.builtin.wait_for:
+    host: "{{ technitium_node_domain }}"
+    port: "{{ technitium_web_service_https_port }}"
+    timeout: 15
+  delegate_to: localhost
+  become: false
+  register: technitium_api_probe
+  ignore_errors: true
+  when: technitium_tls_enabled | bool
+  tags: &technitium_api_tags
+    - technitium_cluster
+    - technitium_zones
+    - technitium_records
+    - technitium_dnssec
+    - technitium_blocking
+    - technitium_dhcp
+    - technitium_apps
 
-- name: Sign DNSSEC zones that aren't already signed
-  effectivelywild.technitium_dns.technitium_dns_sign_zone:
-    api_url: "{{ technitium_api_url }}"
-    api_token: "{{ technitium_api_token }}"
-    zone: "{{ item.item }}"
-    algorithm: "{{ technitium_dnssec_algorithm }}"
-    curve: "{{ technitium_dnssec_curve }}"
-    nxProof: "{{ technitium_dnssec_nx_proof }}"
-  loop: "{{ technitium_dnssec_status.results }}"
-  loop_control:
-    label: "{{ item.item }}"
-  when: item.dnssec_properties.dnssecStatus == 'Unsigned'
-  tags: technitium_dnssec
+- name: Pick the API path
+  ansible.builtin.set_fact:
+    technitium_api_remote: "{{ technitium_api_probe is defined and technitium_api_probe is succeeded }}"
+  when: technitium_tls_enabled | bool
+  tags: *technitium_api_tags
 
-- name: Configure Technitium DNS blocking
-  # blockListUrls can't be set to an empty list directly (the module rejects
-  # it) - clearing it requires the explicit clear_ flag instead, which this
-  # sets whenever the desired list is empty.
-  effectivelywild.technitium_dns.technitium_dns_set_server_settings:
-    api_url: "{{ technitium_api_url }}"
-    api_token: "{{ technitium_api_token }}"
-    enableBlocking: "{{ technitium_blocking_enabled }}"
-    blockingType: "{{ technitium_blocking_type }}"
-    blockListUpdateIntervalHours: "{{ technitium_block_list_update_interval_hours }}"
-    blockingBypassList: "{{ technitium_blocking_bypass_list }}"
-    blockListUrls: "{{ technitium_block_list_urls }}"
-    clear_blockListUrls: "{{ technitium_block_list_urls | length == 0 }}"
-  tags: technitium_blocking
+- name: Technitium API tasks
+  delegate_to: "{{ 'localhost' if technitium_api_remote | bool else inventory_hostname }}"
+  become: false
+  vars:
+    technitium_api_url: "{{ ('https://' ~ technitium_node_domain) if technitium_api_remote | bool else 'http://localhost' }}"
+    technitium_api_port: "{{ technitium_web_service_https_port if technitium_api_remote | bool else 5380 }}"
+  block:
+    - name: Set this node's DNS server domain
+      effectivelywild.technitium_dns.technitium_dns_set_server_settings:
+        api_url: "{{ technitium_api_url }}"
+        api_token: "{{ technitium_api_token }}"
+        api_port: "{{ technitium_api_port }}"
+        dnsServerDomain: "{{ technitium_dns_server_domain }}"
+      when: technitium_cluster_role | length > 0
+      tags: technitium_cluster
 
-- name: Ensure manually blocked domains
-  effectivelywild.technitium_dns.technitium_dns_add_blocked_zone:
-    api_url: "{{ technitium_api_url }}"
-    api_token: "{{ technitium_api_token }}"
-    domain: "{{ item }}"
-  loop: "{{ technitium_blocked_zones }}"
-  tags: technitium_blocking
+    - name: Get cluster state
+      effectivelywild.technitium_dns.technitium_dns_get_cluster_state:
+        api_url: "{{ technitium_api_url }}"
+        api_token: "{{ technitium_api_token }}"
+        api_port: "{{ technitium_api_port }}"
+      register: technitium_cluster_state
+      when: technitium_cluster_role | length > 0
+      tags: technitium_cluster
 
-- name: Ensure manually allowed domains
-  effectivelywild.technitium_dns.technitium_dns_add_allowed_zone:
-    api_url: "{{ technitium_api_url }}"
-    api_token: "{{ technitium_api_token }}"
-    domain: "{{ item }}"
-  loop: "{{ technitium_allowed_zones }}"
-  tags: technitium_blocking
+    # Init (primary) and join (secondary) are separate tasks, in this order, on
+    # purpose: the linear strategy finishes a task on every host before starting
+    # the next, so the primary is guaranteed to be initialized by the time the
+    # secondary tries to join it.
+    - name: Initialize cluster on the primary
+      effectivelywild.technitium_dns.technitium_dns_init_cluster:
+        api_url: "{{ technitium_api_url }}"
+        api_token: "{{ technitium_api_token }}"
+        api_port: "{{ technitium_api_port }}"
+        cluster_domain: "{{ technitium_cluster_domain }}"
+        primary_node_ip_addresses: "{{ technitium_node_ip_addresses }}"
+      when:
+        - technitium_cluster_role == 'primary'
+        - not technitium_cluster_state.cluster_state.clusterInitialized
+      tags: technitium_cluster
 
-- name: Ensure Technitium DHCP scopes
-  effectivelywild.technitium_dns.technitium_dns_set_dhcp_scope:
-    "{{ {'api_url': technitium_api_url, 'api_token': technitium_api_token} | combine(item) }}"
-  loop: "{{ technitium_dhcp_scopes }}"
-  loop_control:
-    label: "{{ item.name }}"
-  tags: technitium_dhcp
+    - name: Join cluster as secondary
+      effectivelywild.technitium_dns.technitium_dns_init_join_cluster:
+        api_url: "{{ technitium_api_url }}"
+        api_token: "{{ technitium_api_token }}"
+        api_port: "{{ technitium_api_port }}"
+        secondary_node_ip_addresses: "{{ technitium_node_ip_addresses }}"
+        primary_node_url: "{{ technitium_cluster_primary_url }}"
+        primary_node_ip_address: "{{ technitium_cluster_primary_ip }}"
+        primary_node_username: "{{ technitium_cluster_admin_username }}"
+        primary_node_password: "{{ technitium_cluster_admin_password }}"
+      no_log: true
+      when:
+        - technitium_cluster_role == 'secondary'
+        - not technitium_cluster_state.cluster_state.clusterInitialized
+      tags: technitium_cluster
 
-- name: Enable Technitium DHCP scopes
-  effectivelywild.technitium_dns.technitium_dns_enable_dhcp_scope:
-    api_url: "{{ technitium_api_url }}"
-    api_token: "{{ technitium_api_token }}"
-    name: "{{ item.name }}"
-  loop: "{{ technitium_dhcp_scopes }}"
-  loop_control:
-    label: "{{ item.name }}"
-  tags: technitium_dhcp
+    - name: Ensure Technitium DNS zones
+      effectivelywild.technitium_dns.technitium_dns_zone:
+        "{{ {'api_url': technitium_api_url, 'api_port': technitium_api_port, 'api_token': technitium_api_token, 'state': 'present'} | combine(item) }}"
+      loop: "{{ technitium_zones }}"
+      loop_control:
+        label: "{{ item.zone }}"
+      when: technitium_manage_config | bool
+      tags: technitium_zones
 
-- name: Install Technitium DNS apps
-  # No-ops on an app that's already installed rather than updating it -
-  # see the update task below for that.
-  effectivelywild.technitium_dns.technitium_dns_download_and_install_app:
-    "{{ {'api_url': technitium_api_url, 'api_token': technitium_api_token} | combine(item) }}"
-  loop: "{{ technitium_apps }}"
-  loop_control:
-    label: "{{ item.name }}"
-  tags: technitium_apps
+    - name: Add zones to the cluster catalog so secondaries replicate them
+      effectivelywild.technitium_dns.technitium_dns_set_zone_options:
+        api_url: "{{ technitium_api_url }}"
+        api_port: "{{ technitium_api_port }}"
+        api_token: "{{ technitium_api_token }}"
+        zone: "{{ item }}"
+        catalog: "{{ technitium_cluster_catalog }}"
+      loop: "{{ (technitium_zones | map(attribute='zone') | list) + technitium_cluster_extra_zones }}"
+      when: technitium_cluster_catalog | length > 0
+      tags: technitium_zones
 
-- name: Update Technitium DNS apps
-  # No when: guard needed: download_and_update_app fails against an app
-  # that isn't installed, but the task above guarantees it always is by
-  # this point.
-  effectivelywild.technitium_dns.technitium_dns_download_and_update_app:
-    "{{ {'api_url': technitium_api_url, 'api_token': technitium_api_token} | combine(item) }}"
-  loop: "{{ technitium_apps }}"
-  loop_control:
-    label: "{{ item.name }}"
-  tags: technitium_apps
+    - name: Ensure Technitium DNS records
+      effectivelywild.technitium_dns.technitium_dns_record:
+        "{{ {'api_url': technitium_api_url, 'api_port': technitium_api_port, 'api_token': technitium_api_token, 'state': 'present'} | combine(item) }}"
+      loop: "{{ technitium_records }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: technitium_manage_config | bool
+      tags: technitium_records
+
+    - name: Get current DNSSEC status for zones to sign
+      effectivelywild.technitium_dns.technitium_dns_get_dnssec_properties:
+        api_url: "{{ technitium_api_url }}"
+        api_token: "{{ technitium_api_token }}"
+        api_port: "{{ technitium_api_port }}"
+        zone: "{{ item }}"
+      loop: "{{ technitium_dnssec_zones }}"
+      register: technitium_dnssec_status
+      when: technitium_manage_config | bool
+      tags: technitium_dnssec
+
+    - name: Sign DNSSEC zones that aren't already signed
+      effectivelywild.technitium_dns.technitium_dns_sign_zone:
+        api_url: "{{ technitium_api_url }}"
+        api_token: "{{ technitium_api_token }}"
+        api_port: "{{ technitium_api_port }}"
+        zone: "{{ item.item }}"
+        algorithm: "{{ technitium_dnssec_algorithm }}"
+        curve: "{{ technitium_dnssec_curve }}"
+        nxProof: "{{ technitium_dnssec_nx_proof }}"
+      loop: "{{ technitium_dnssec_status.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+      when: (technitium_manage_config | bool) and item.dnssec_properties.dnssecStatus == 'Unsigned'
+      tags: technitium_dnssec
+
+    - name: Configure Technitium DNS blocking
+      # blockListUrls can't be set to an empty list directly (the module rejects
+      # it) - clearing it requires the explicit clear_ flag instead, which this
+      # sets whenever the desired list is empty.
+      effectivelywild.technitium_dns.technitium_dns_set_server_settings:
+        api_url: "{{ technitium_api_url }}"
+        api_token: "{{ technitium_api_token }}"
+        api_port: "{{ technitium_api_port }}"
+        enableBlocking: "{{ technitium_blocking_enabled }}"
+        blockingType: "{{ technitium_blocking_type }}"
+        blockListUpdateIntervalHours: "{{ technitium_block_list_update_interval_hours }}"
+        blockingBypassList: "{{ technitium_blocking_bypass_list }}"
+        blockListUrls: "{{ technitium_block_list_urls }}"
+        clear_blockListUrls: "{{ technitium_block_list_urls | length == 0 }}"
+      when: technitium_manage_config | bool
+      tags: technitium_blocking
+
+    - name: Ensure manually blocked domains
+      effectivelywild.technitium_dns.technitium_dns_add_blocked_zone:
+        api_url: "{{ technitium_api_url }}"
+        api_token: "{{ technitium_api_token }}"
+        api_port: "{{ technitium_api_port }}"
+        domain: "{{ item }}"
+      loop: "{{ technitium_blocked_zones }}"
+      when: technitium_manage_config | bool
+      tags: technitium_blocking
+
+    - name: Ensure manually allowed domains
+      effectivelywild.technitium_dns.technitium_dns_add_allowed_zone:
+        api_url: "{{ technitium_api_url }}"
+        api_token: "{{ technitium_api_token }}"
+        api_port: "{{ technitium_api_port }}"
+        domain: "{{ item }}"
+      loop: "{{ technitium_allowed_zones }}"
+      when: technitium_manage_config | bool
+      tags: technitium_blocking
+
+    - name: Ensure Technitium DHCP scopes
+      effectivelywild.technitium_dns.technitium_dns_set_dhcp_scope:
+        "{{ {'api_url': technitium_api_url, 'api_port': technitium_api_port, 'api_token': technitium_api_token} | combine(item) }}"
+      loop: "{{ technitium_dhcp_scopes }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: technitium_manage_config | bool
+      tags: technitium_dhcp
+
+    - name: Enable Technitium DHCP scopes
+      effectivelywild.technitium_dns.technitium_dns_enable_dhcp_scope:
+        api_url: "{{ technitium_api_url }}"
+        api_token: "{{ technitium_api_token }}"
+        api_port: "{{ technitium_api_port }}"
+        name: "{{ item.name }}"
+      loop: "{{ technitium_dhcp_scopes }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: technitium_manage_config | bool
+      tags: technitium_dhcp
+
+    - name: Install Technitium DNS apps
+      # No-ops on an app that's already installed rather than updating it -
+      # see the update task below for that.
+      effectivelywild.technitium_dns.technitium_dns_download_and_install_app:
+        "{{ {'api_url': technitium_api_url, 'api_port': technitium_api_port, 'api_token': technitium_api_token} | combine(item) }}"
+      loop: "{{ technitium_apps }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: technitium_manage_config | bool
+      tags: technitium_apps
+
+    - name: Update Technitium DNS apps
+      # No when: guard needed: download_and_update_app fails against an app
+      # that isn't installed, but the task above guarantees it always is by
+      # this point.
+      effectivelywild.technitium_dns.technitium_dns_download_and_update_app:
+        "{{ {'api_url': technitium_api_url, 'api_port': technitium_api_port, 'api_token': technitium_api_token} | combine(item) }}"
+      loop: "{{ technitium_apps }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: technitium_manage_config | bool
+      tags: technitium_apps

@@ -5,6 +5,14 @@ technitium_install_script_url: "https://download.technitium.com/dns/install.sh"
 # regardless of the guest's address. No port - the collection's modules
 # append their own api_port (default 5380) to this URL.
 technitium_api_url: "http://localhost"
+technitium_api_port: 5380
+
+# Whether the API tasks after the TLS setup run from the controller over
+# HTTPS (reaching the node as technitium_node_domain) instead of through the
+# guest. Set per play by tasks/main.yaml, which probes the endpoint and falls
+# back to the guest if it can't be reached; this default only matters when
+# those tasks are skipped (e.g. tagged out), where the guest path is safe.
+technitium_api_remote: false
 
 # Generate via the web console (Administration > Sessions > Create Token) -
 # Ansible doesn't create this token itself. Actual value supplied via
@@ -102,3 +110,41 @@ technitium_allowed_zones: []
 # Derives from whether there's anything to block, rather than a separate
 # manual flag, same pattern as technitium_tls_enabled above.
 technitium_blocking_enabled: "{{ (technitium_block_list_urls | length > 0) or (technitium_blocked_zones | length > 0) }}"
+
+# Clustering (Technitium v14+). Empty technitium_cluster_role = standalone.
+# Set per host in host_vars/: "primary" owns all config and is where zones,
+# records, DHCP, blocking, DNSSEC and apps are managed; "secondary" joins it
+# and has everything synced from it, so the role skips those tasks there.
+technitium_cluster_role: ""
+technitium_manage_config: "{{ technitium_cluster_role != 'secondary' }}"
+# Identifies the cluster; becomes a Primary zone on the primary and cannot be
+# changed later.
+technitium_cluster_domain: ""
+# This node's own name inside the cluster; must be unique per node and
+# resolvable by the other nodes.
+technitium_node_domain: "{{ inventory_hostname }}.server.agb.ingenstans.se"
+# Static address(es) the other nodes reach this one on.
+technitium_node_ip_addresses: []
+# Secondary only: how to reach the primary's web service for the join.
+technitium_cluster_primary_url: ""
+technitium_cluster_primary_ip: ""
+# Secondary only: an administrator on the primary. The join call takes
+# credentials rather than an API token. Supplied via group_vars/technitium.yaml.
+technitium_cluster_admin_username: ""
+technitium_cluster_admin_password: ""
+
+# Technitium replicates zones to cluster secondaries only if they are members
+# of the cluster's catalog zone (cluster-catalog.<cluster domain>, created by
+# the cluster init). Zones that existed before the init are not members, and
+# the zone module never touches an existing zone's options, so the role sets
+# membership explicitly for every zone in technitium_zones plus these extras
+# (zones Technitium created itself, e.g. the reverse zones DHCP leases
+# register PTR records in).
+technitium_cluster_extra_zones: []
+technitium_cluster_catalog: "{{ ('cluster-catalog.' ~ technitium_cluster_domain) if technitium_cluster_role == 'primary' else '' }}"
+
+# The name Technitium knows this node by inside a cluster. The cluster init
+# renames each node to <hostname>.<cluster domain> whatever was set before,
+# so the role must set exactly that or every run would fight the cluster.
+# Standalone nodes use technitium_node_domain.
+technitium_dns_server_domain: "{{ (inventory_hostname ~ '.' ~ technitium_cluster_domain) if technitium_cluster_role | length > 0 else technitium_node_domain }}"

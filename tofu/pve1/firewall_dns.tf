@@ -90,4 +90,25 @@ resource "proxmox_virtual_environment_firewall_rules" "dns" {
     source  = "fd01:eae3:bc39:64::/64"
     comment = "Technitium web console (HTTPS, IPv6/ULA) - main (VLAN 100) only"
   }
+
+  # Cluster traffic from dns02 (the secondary, on the new cluster but the
+  # same VLAN): it joins via and syncs from dns01's web service. Same VLAN,
+  # so it never transits OPNsense and needs a host rule.
+  rule {
+    type    = "in"
+    action  = "ACCEPT"
+    proto   = "tcp"
+    dport   = "53443"
+    source  = "10.1.50.3"
+    comment = "Technitium cluster - dns02 (IPv4)"
+  }
+
+  rule {
+    type    = "in"
+    action  = "ACCEPT"
+    proto   = "tcp"
+    dport   = "53443"
+    source  = "fd01:eae3:bc39:32:be24:11ff:fef8:dc3c"
+    comment = "Technitium cluster - dns02 (IPv6/ULA)"
+  }
 }
