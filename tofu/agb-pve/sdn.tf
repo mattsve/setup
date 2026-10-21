@@ -6,6 +6,12 @@
 # networks that exist on every node, which is what lets a guest fail over.
 #
 # Zone and VNet IDs are limited to 8 characters.
+#
+# There is deliberately no VNet for VLAN 10: the nodes' own management address
+# sits on vmbr1.10, and a VNet on the same VLAN and bridge makes SDN create
+# that sub-interface itself and enslave it into the VNet's bridge, which
+# strips the host address (web UI and SSH go away). Never add a VNet for a VLAN
+# a node has its own address on.
 
 resource "proxmox_sdn_zone_vlan" "vlans" {
   id     = "vlans"
@@ -23,11 +29,11 @@ resource "proxmox_sdn_vnet" "server" {
   depends_on = [proxmox_sdn_applier.finalizer]
 }
 
-resource "proxmox_sdn_vnet" "mgmt" {
-  id    = "mgmt"
+resource "proxmox_sdn_vnet" "storage" {
+  id    = "storage"
   zone  = proxmox_sdn_zone_vlan.vlans.id
-  tag   = 10
-  alias = "Management (VLAN 10)"
+  tag   = 20
+  alias = "Storage (VLAN 20)"
 
   depends_on = [proxmox_sdn_applier.finalizer]
 }
@@ -41,14 +47,14 @@ resource "proxmox_sdn_applier" "applier" {
     replace_triggered_by = [
       proxmox_sdn_zone_vlan.vlans,
       proxmox_sdn_vnet.server,
-      proxmox_sdn_vnet.mgmt,
+      proxmox_sdn_vnet.storage,
     ]
   }
 
   depends_on = [
     proxmox_sdn_zone_vlan.vlans,
     proxmox_sdn_vnet.server,
-    proxmox_sdn_vnet.mgmt,
+    proxmox_sdn_vnet.storage,
   ]
 }
 
