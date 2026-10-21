@@ -1,7 +1,13 @@
 {% for proxy in caddy_proxies %}
 {{ proxy.hostname }} {
 	tls {{ caddy_cert_dir }}/fullchain.pem {{ caddy_cert_dir }}/privkey.pem
-	reverse_proxy {{ proxy.backend_scheme | default('http') }}://{{ proxy.backend }} {
+{% set backends = [proxy.backend] if proxy.backend is string else proxy.backend %}
+	reverse_proxy{% for b in backends %} {{ proxy.backend_scheme | default('http') }}://{{ b }}{% endfor %} {
+{% if backends | length > 1 %}
+		lb_policy ip_hash
+		health_uri /
+		health_interval 10s
+{% endif %}
 {% if proxy.backend_tls_insecure | default(false) %}
 		transport http {
 			tls_insecure_skip_verify

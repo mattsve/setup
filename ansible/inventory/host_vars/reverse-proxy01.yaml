@@ -22,8 +22,13 @@ caddy_proxies:
     backend_scheme: http
   - hostname: plex.agb.ingenstans.se
     backend: "[fd01:eae3:bc39:32:be24:11ff:fe82:633b]:32400"
+  # Any cluster node serves the whole cluster's UI, so spread across all
+  # three and let health checks skip one that's down/rebooting.
   - hostname: pve.agb.ingenstans.se
-    backend: 10.1.10.2:8006
+    backend:
+      - pve01.management.agb.ingenstans.se:8006
+      - pve02.management.agb.ingenstans.se:8006
+      - pve03.management.agb.ingenstans.se:8006
     backend_scheme: https
     backend_tls_insecure: true
   - hostname: pulse.agb.ingenstans.se
