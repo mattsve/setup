@@ -15,3 +15,26 @@ resource "proxmox_download_file" "debian_13_standard_pve02" {
   # shouldn't be able to hold up unrelated plans.
   overwrite = false
 }
+
+# Cloud-init vendor data installing qemu-guest-agent (see tofu/pve1/templates.tf).
+# Snippets live on each node's own "local" storage (needs the "snippets"
+# content type enabled), and the VM references it by path, so every node an
+# HA guest can fail over to needs its own copy.
+resource "proxmox_virtual_environment_file" "vm_vendor_data" {
+  for_each = toset(["pve01", "pve02", "pve03"])
+
+  content_type = "snippets"
+  datastore_id = "local"
+  node_name    = each.key
+
+  source_raw {
+    file_name = "vm-vendor-data.yaml"
+    data      = <<-EOF
+      #cloud-config
+      runcmd:
+        - apt-get update
+        - apt-get install -y qemu-guest-agent
+        - systemctl enable --now qemu-guest-agent
+    EOF
+  }
+}
