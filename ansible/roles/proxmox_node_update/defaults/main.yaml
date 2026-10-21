@@ -1,0 +1,22 @@
+---
+# Poll budget for every "wait until X" step (quorum, replication, HA settling):
+# retries * delay seconds.
+proxmox_node_update_retries: 90
+proxmox_node_update_delay: 10
+
+# A replication job counts as caught up when its last successful sync is
+# younger than this (jobs run every 15 minutes by default).
+proxmox_node_update_replication_max_age: 1800
+
+# HA service states that are not "settled": a service in any other state than
+# these is still moving, starting or failing.
+proxmox_node_update_settled_states: [started, stopped, disabled, ignored]
+
+# HA states that don't need evacuating before a reboot (nothing is running).
+proxmox_node_update_idle_states: [stopped, disabled, ignored]
+
+# Maintenance mode only evacuates HA-managed guests; a running guest outside
+# HA would just be shut down by the reboot. Abort instead unless allowed.
+proxmox_node_update_allow_non_ha_guests: false
+
+proxmox_node_update_reboot_timeout: 900

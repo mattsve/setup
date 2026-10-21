@@ -1,0 +1,18 @@
+---
+# Rolling update of the cluster nodes, one at a time: dist-upgrade, and if a
+# reboot is needed, HA maintenance mode -> wait for guests to leave -> reboot
+# -> rejoin -> leave maintenance. See roles/proxmox_node_update. Separate from
+# update_all_packages.yaml, which handles the guests.
+- name: Rolling update of Proxmox cluster nodes
+  # Only the nodes of the agb-pve cluster: cluster_agb_pve also holds that
+  # cluster's guests, so intersect with proxmox_nodes. pve1 is standalone (no
+  # HA to evacuate to) and so isn't in cluster_agb_pve.
+  hosts: cluster_agb_pve:&proxmox_nodes
+  serial: 1
+  gather_facts: false
+
+  tasks:
+    - name: Import proxmox_node_update role
+      import_role:
+        name: proxmox_node_update
+      tags: update_cluster_nodes

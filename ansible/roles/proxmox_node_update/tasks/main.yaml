@@ -1,0 +1,16 @@
+---
+- name: Pre-flight cluster health check
+  ansible.builtin.include_tasks: health.yaml
+
+- name: Upgrade packages
+  ansible.builtin.apt:
+    upgrade: dist
+    update_cache: true
+
+- name: Reboot if needed
+  ansible.builtin.include_tasks: reboot_if_needed.yaml
+
+# Gate before the next node: guests failed back and replication caught up, so
+# the next node going down doesn't fail over from a stale replica.
+- name: Wait for the cluster to settle before continuing
+  ansible.builtin.include_tasks: health.yaml

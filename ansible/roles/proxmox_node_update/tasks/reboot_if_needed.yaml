@@ -1,0 +1,95 @@
+---
+- name: Check for /var/run/reboot-required
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+  register: proxmox_node_update_reboot_file
+
+# Proxmox kernel packages don't reliably create reboot-required, so also
+# compare the running kernel to the newest one installed in /boot.
+- name: Find newest installed kernel
+  ansible.builtin.shell:
+    cmd: set -o pipefail; ls -1 /boot/vmlinuz-* | sed 's|/boot/vmlinuz-||' | sort -V | tail -n 1
+    executable: /bin/bash
+  register: proxmox_node_update_newest_kernel
+  changed_when: false
+
+- name: Get running kernel
+  ansible.builtin.command: uname -r
+  register: proxmox_node_update_running_kernel
+  changed_when: false
+
+- name: Decide whether a reboot is needed
+  ansible.builtin.set_fact:
+    proxmox_node_update_reboot_needed: >-
+      {{ proxmox_node_update_reboot_file.stat.exists or
+         proxmox_node_update_newest_kernel.stdout != proxmox_node_update_running_kernel.stdout }}
+
+- name: Report reboot decision
+  ansible.builtin.debug:
+    msg: >-
+      reboot {{ 'needed' if proxmox_node_update_reboot_needed | bool else 'not needed' }}
+      (running {{ proxmox_node_update_running_kernel.stdout }},
+      newest installed {{ proxmox_node_update_newest_kernel.stdout }})
+
+- name: Evacuate, reboot and rejoin
+  when: proxmox_node_update_reboot_needed | bool
+  block:
+    - name: List running guests on this node
+      ansible.builtin.command: pvesh get /nodes/{{ inventory_hostname }}/{{ item }} --output-format json
+      register: proxmox_node_update_guests
+      changed_when: false
+      loop: [qemu, lxc]
+
+    - name: List HA resources
+      ansible.builtin.command: pvesh get /cluster/ha/resources --output-format json
+      register: proxmox_node_update_ha_resources
+      changed_when: false
+
+    # sid is "vm:<id>" / "ct:<id>"
+    - name: Refuse to reboot with running guests outside HA
+      ansible.builtin.assert:
+        that: proxmox_node_update_allow_non_ha_guests | bool or proxmox_node_update_unmanaged | length == 0
+        fail_msg: >-
+          Running guests not managed by HA would be shut down by the reboot, not
+          migrated: {{ proxmox_node_update_unmanaged }}
+      vars:
+        proxmox_node_update_ha_sids: >-
+          {{ proxmox_node_update_ha_resources.stdout | from_json | map(attribute='sid') | list }}
+        proxmox_node_update_unmanaged: >-
+          {{ proxmox_node_update_guests.results
+             | map(attribute='stdout') | map('from_json') | flatten
+             | selectattr('status', 'eq', 'running')
+             | rejectattr('vmid', 'in', proxmox_node_update_ha_sids | map('regex_replace', '^\w+:', '') | map('int') | list)
+             | map(attribute='name') | list }}
+
+    - name: Enable HA maintenance mode
+      ansible.builtin.command: ha-manager crm-command node-maintenance enable {{ inventory_hostname }}
+      changed_when: true
+
+    - name: Wait for HA guests to leave this node
+      ansible.builtin.command: pvesh get /cluster/ha/status/current --output-format json
+      register: proxmox_node_update_evac
+      changed_when: false
+      retries: "{{ proxmox_node_update_retries }}"
+      delay: "{{ proxmox_node_update_delay }}"
+      until: >-
+        proxmox_node_update_evac.rc == 0 and
+        (proxmox_node_update_evac.stdout | from_json
+          | selectattr('type', 'eq', 'service')
+          | selectattr('node', 'eq', inventory_hostname)
+          | rejectattr('state', 'in', proxmox_node_update_idle_states) | list | length) == 0
+
+    - name: Reboot
+      ansible.builtin.reboot:
+        msg: "Reboot initiated by Ansible after package upgrades"
+        reboot_timeout: "{{ proxmox_node_update_reboot_timeout }}"
+        post_reboot_delay: 30
+
+    # Deliberately no rescue/always that disables maintenance: if anything
+    # above fails the node stays drained for a human to look at.
+    - name: Wait for the node to rejoin the cluster
+      ansible.builtin.include_tasks: health.yaml
+
+    - name: Disable HA maintenance mode
+      ansible.builtin.command: ha-manager crm-command node-maintenance disable {{ inventory_hostname }}
+      changed_when: true

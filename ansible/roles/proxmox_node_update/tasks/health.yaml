@@ -1,0 +1,75 @@
+---
+# Cluster is healthy: quorate, every node online, HA settled, replication
+# caught up. Used as the pre-flight check and as the gate before moving on to
+# the next node. Everything polls, since right after a reboot these are
+# expected to be briefly false.
+- name: Wait for quorum and all nodes online
+  ansible.builtin.command: pvesh get /cluster/status --output-format json
+  register: proxmox_node_update_status
+  changed_when: false
+  retries: "{{ proxmox_node_update_retries }}"
+  delay: "{{ proxmox_node_update_delay }}"
+  until: >-
+    proxmox_node_update_status.rc == 0 and
+    (proxmox_node_update_status.stdout | from_json
+      | selectattr('type', 'eq', 'cluster') | map(attribute='quorate') | first | default(0)) == 1 and
+    (proxmox_node_update_status.stdout | from_json
+      | selectattr('type', 'eq', 'node') | selectattr('online', 'eq', 1) | list | length)
+      == (ansible_play_hosts_all | length)
+
+- name: Wait for HA services to settle
+  ansible.builtin.command: pvesh get /cluster/ha/status/current --output-format json
+  register: proxmox_node_update_ha
+  changed_when: false
+  retries: "{{ proxmox_node_update_retries }}"
+  delay: "{{ proxmox_node_update_delay }}"
+  until: >-
+    proxmox_node_update_ha.rc == 0 and
+    (proxmox_node_update_ha.stdout | from_json
+      | selectattr('type', 'eq', 'service')
+      | rejectattr('state', 'in', proxmox_node_update_settled_states) | list | length) == 0
+
+# Don't sit out a full replication interval: ask the scheduler to run any job
+# that is already too old (or has never synced) right away. Failing jobs are
+# left alone so the wait below surfaces them instead of retrying forever.
+- name: Get replication status
+  ansible.builtin.command: pvesh get /nodes/{{ item }}/replication --output-format json
+  register: proxmox_node_update_replication_status
+  changed_when: false
+  loop: "{{ ansible_play_hosts_all }}"
+
+- name: Trigger stale replication jobs now
+  ansible.builtin.command: pvesh create /nodes/{{ item.node }}/replication/{{ item.id }}/schedule_now
+  changed_when: true
+  loop: "{{ proxmox_node_update_stale_jobs | from_json }}"
+  loop_control:
+    label: "{{ item.id }} on {{ item.node }}"
+  vars:
+    proxmox_node_update_cutoff: "{{ now(utc=true).timestamp() - proxmox_node_update_replication_max_age }}"
+    proxmox_node_update_stale_jobs: >-
+      {%- set ns = namespace(jobs=[]) -%}
+      {%- for r in proxmox_node_update_replication_status.results -%}
+      {%- for j in r.stdout | from_json -%}
+      {%- if (j.last_sync | default(0)) < (proxmox_node_update_cutoff | float) and (j.fail_count | default(0)) == 0 -%}
+      {%- set ns.jobs = ns.jobs + [{'node': r.item, 'id': j.id}] -%}
+      {%- endif -%}
+      {%- endfor -%}
+      {%- endfor -%}
+      {{- ns.jobs | to_json -}}
+
+- name: Wait for replication jobs to be caught up
+  ansible.builtin.command: pvesh get /nodes/{{ item }}/replication --output-format json
+  register: proxmox_node_update_replication
+  changed_when: false
+  loop: "{{ ansible_play_hosts_all }}"
+  retries: "{{ proxmox_node_update_retries }}"
+  delay: "{{ proxmox_node_update_delay }}"
+  until: >-
+    proxmox_node_update_replication.rc == 0 and
+    (proxmox_node_update_replication.stdout | from_json
+      | rejectattr('fail_count', 'undefined') | rejectattr('fail_count', 'eq', 0) | list | length) == 0 and
+    (proxmox_node_update_replication.stdout | from_json
+      | selectattr('last_sync', 'undefined') | list | length) == 0 and
+    (proxmox_node_update_replication.stdout | from_json
+      | map(attribute='last_sync') | select('lt', now(utc=true).timestamp() - proxmox_node_update_replication_max_age)
+      | list | length) == 0
