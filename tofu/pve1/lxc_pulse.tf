@@ -1,8 +1,8 @@
 resource "proxmox_virtual_environment_container" "pulse" {
   node_name     = "pve1"
   vm_id         = 104
-  start_on_boot = true
-  started       = true
+  start_on_boot = false
+  started       = false
   unprivileged  = true
   tags          = ["managed-updates", "autologin", "pulse"]
 
