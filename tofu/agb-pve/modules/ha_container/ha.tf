@@ -11,6 +11,10 @@ resource "proxmox_replication" "this" {
   schedule = var.replication_schedule
   comment  = "${var.name} -> ${each.key}"
 
+  # Proxmox rejects a job for a guest that doesn't exist yet, and nothing here
+  # references the container, so without this Tofu creates both in parallel.
+  depends_on = [proxmox_virtual_environment_container.this]
+
   lifecycle {
     ignore_changes = [target]
   }
