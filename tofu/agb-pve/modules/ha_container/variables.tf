@@ -29,16 +29,21 @@ variable "mac_address" {
 }
 
 variable "ipv4_address" {
-  description = "Static IPv4 address in CIDR form"
+  description = "Static IPv4 address in CIDR form, or \"dhcp\""
   type        = string
+  default     = "dhcp"
 }
 
 variable "ipv4_gateway" {
-  type = string
+  description = "Gateway for a static address; leave null for DHCP"
+  type        = string
+  default     = null
 }
 
 variable "dns_servers" {
-  type = list(string)
+  description = "Resolvers pinned in the container; empty to take them from DHCP/RA"
+  type        = list(string)
+  default     = []
 }
 
 variable "tags" {

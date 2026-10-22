@@ -50,8 +50,11 @@ resource "proxmox_virtual_environment_container" "this" {
         gateway = var.ipv4_gateway
       }
     }
-    dns {
-      servers = var.dns_servers
+    dynamic "dns" {
+      for_each = length(var.dns_servers) == 0 ? [] : [var.dns_servers]
+      content {
+        servers = dns.value
+      }
     }
   }
 

@@ -10,7 +10,9 @@ resource "proxmox_virtual_environment_firewall_options" "this" {
   input_policy  = "DROP"
   output_policy = "ACCEPT"
 
-  # No `dhcp` flag: the IPv4 address is static, not DHCP-leased.
+  # Lets a DHCP-addressed guest's lease traffic through the DROP policy; a
+  # static guest doesn't need it.
+  dhcp = var.ipv4_address == "dhcp"
   # ndp is still needed for SLAAC's Neighbor/Router Discovery traffic.
   ndp = true
 }
