@@ -70,12 +70,32 @@ variable "ha_nodes" {
   type = map(number)
 }
 
+variable "cloud_init" {
+  description = "Attach a cloud-init drive (ansible user + vendor data). Off for appliance images like HAOS."
+  type        = bool
+  default     = true
+}
+
 variable "vendor_data_file_id" {
   description = "Cloud-init vendor data snippet (installs qemu-guest-agent)"
   type        = string
+  default     = null
 }
 
 variable "ansible_ssh_public_key" {
   description = "SSH public key for the cloud-init 'ansible' user"
   type        = string
+  default     = null
+}
+
+variable "bios" {
+  description = "seabios, or ovmf (UEFI; adds an EFI disk)"
+  type        = string
+  default     = "seabios"
+}
+
+variable "cpu_type" {
+  description = "CPU model; null keeps the provider default"
+  type        = string
+  default     = null
 }

@@ -24,8 +24,11 @@ resource "proxmox_virtual_environment_vm" "this" {
     enabled = true
   }
 
+  bios = var.bios
+
   cpu {
     cores = var.cores
+    type  = var.cpu_type
   }
 
   memory {
@@ -34,6 +37,14 @@ resource "proxmox_virtual_environment_vm" "this" {
   }
 
   scsi_hardware = "virtio-scsi-single"
+
+  dynamic "efi_disk" {
+    for_each = var.bios == "ovmf" ? [1] : []
+    content {
+      datastore_id = var.disk_datastore
+      type         = "4m"
+    }
+  }
 
   disk {
     datastore_id = var.disk_datastore
@@ -45,20 +56,24 @@ resource "proxmox_virtual_environment_vm" "this" {
     replicate = true
   }
 
-  initialization {
-    datastore_id        = var.disk_datastore
-    interface           = "ide2"
-    vendor_data_file_id = var.vendor_data_file_id
+  # Skipped for appliance images (HAOS) that don't run cloud-init.
+  dynamic "initialization" {
+    for_each = var.cloud_init ? [1] : []
+    content {
+      datastore_id        = var.disk_datastore
+      interface           = "ide2"
+      vendor_data_file_id = var.vendor_data_file_id
 
-    ip_config {
-      ipv4 {
-        address = "dhcp"
+      ip_config {
+        ipv4 {
+          address = "dhcp"
+        }
       }
-    }
 
-    user_account {
-      username = "ansible"
-      keys     = [var.ansible_ssh_public_key]
+      user_account {
+        username = "ansible"
+        keys     = [var.ansible_ssh_public_key]
+      }
     }
   }
 
@@ -72,6 +87,6 @@ resource "proxmox_virtual_environment_vm" "this" {
   }
 
   lifecycle {
-    ignore_changes = [node_name, disk]
+    ignore_changes = [node_name, disk, efi_disk]
   }
 }
