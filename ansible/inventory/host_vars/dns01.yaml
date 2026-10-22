@@ -204,15 +204,15 @@ technitium_records:
     type: AAAA
     ipAddress: fd01:eae3:bc39:a:3eec:efff:fe95:f0f8
     ttl: 3600
-  - name: pbs01.management.agb.ingenstans.se
-    zone: management.agb.ingenstans.se
+  - name: pbs01.storage.agb.ingenstans.se
+    zone: storage.agb.ingenstans.se
     type: A
-    ipAddress: 10.1.10.3
+    ipAddress: 10.1.20.2
     ttl: 3600
-  - name: pbs01.management.agb.ingenstans.se
-    zone: management.agb.ingenstans.se
+  - name: pbs01.storage.agb.ingenstans.se
+    zone: storage.agb.ingenstans.se
     type: AAAA
-    ipAddress: fd01:eae3:bc39:a:be24:11ff:fea5:71cb
+    ipAddress: fd01:eae3:bc39:14:be24:11ff:fea5:71cb
     ttl: 3600
   # JetKVM attached to pve01 (static .21; .21-.23 reserved for per-node KVMs).
   # AAAA is SLAAC EUI-64 from its MAC (30:52:53:05:a1:1c).

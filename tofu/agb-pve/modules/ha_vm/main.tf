@@ -80,6 +80,7 @@ resource "proxmox_virtual_environment_vm" "this" {
   network_device {
     bridge      = var.bridge
     mac_address = var.mac_address
+    firewall    = var.nic_firewall
   }
 
   operating_system {
@@ -87,6 +88,7 @@ resource "proxmox_virtual_environment_vm" "this" {
   }
 
   lifecycle {
-    ignore_changes = [node_name, disk, efi_disk]
+    # cdrom: an adopted guest's ISO drive is empty and needn't be tracked.
+    ignore_changes = [node_name, disk, efi_disk, cdrom]
   }
 }

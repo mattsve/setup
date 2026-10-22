@@ -99,3 +99,9 @@ variable "cpu_type" {
   type        = string
   default     = null
 }
+
+variable "nic_firewall" {
+  description = "Enable the Proxmox firewall flag on the NIC"
+  type        = bool
+  default     = false
+}
