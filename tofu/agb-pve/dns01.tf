@@ -32,7 +32,7 @@ module "dns01" {
   }
 
   cores  = 2
-  memory = 4096
+  memory = 1024
 
   firewall_rules = [
     { proto = "udp", dport = "53", comment = "DNS" },
