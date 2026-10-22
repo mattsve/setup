@@ -4,7 +4,7 @@
 {% set backends = [proxy.backend] if proxy.backend is string else proxy.backend %}
 	reverse_proxy{% for b in backends %} {{ proxy.backend_scheme | default('http') }}://{{ b }}{% endfor %} {
 {% if backends | length > 1 %}
-		lb_policy ip_hash
+		lb_policy cookie
 		health_uri /
 		health_interval 10s
 {% endif %}
