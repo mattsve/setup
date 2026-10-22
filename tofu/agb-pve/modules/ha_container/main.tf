@@ -73,7 +73,10 @@ resource "proxmox_virtual_environment_container" "this" {
     type             = "debian"
   }
 
+  # operating_system: the template is only used on create, and a container
+  # imported after a cross-cluster move has no template_file_id in state, which
+  # the provider treats as forcing replacement (destroying the migrated disk).
   lifecycle {
-    ignore_changes = [node_name]
+    ignore_changes = [node_name, operating_system]
   }
 }

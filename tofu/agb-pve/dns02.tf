@@ -82,9 +82,11 @@ module "dns02" {
 
   # Replicated to both other nodes so HA can restart it on either.
   replicate_to = ["pve01", "pve03"]
+  # Equal priorities: required for dns01.tf's dns_apart resource-affinity rule
+  # (Proxmox rejects it over node-affinity rules with multiple priorities).
   ha_nodes = {
-    pve02 = 2
     pve01 = 1
+    pve02 = 1
     pve03 = 1
   }
 
