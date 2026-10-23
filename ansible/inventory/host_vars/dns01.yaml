@@ -226,11 +226,16 @@ technitium_records:
     type: AAAA
     ipAddress: fd01:eae3:bc39:a:3252:53ff:fe05:a11c
     ttl: 3600
-  # No AAAA yet for pve02/pve03's: add once their MACs are known.
+  # No AAAA yet for pve03's: add once its MAC is known.
   - name: jetkvm-pve02.management.agb.ingenstans.se
     zone: management.agb.ingenstans.se
     type: A
     ipAddress: 10.1.10.22
+    ttl: 3600
+  - name: jetkvm-pve02.management.agb.ingenstans.se
+    zone: management.agb.ingenstans.se
+    type: AAAA
+    ipAddress: fd01:eae3:bc39:a:3252:53ff:fe0e:6955
     ttl: 3600
   - name: jetkvm-pve03.management.agb.ingenstans.se
     zone: management.agb.ingenstans.se
