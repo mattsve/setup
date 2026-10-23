@@ -226,7 +226,6 @@ technitium_records:
     type: AAAA
     ipAddress: fd01:eae3:bc39:a:3252:53ff:fe05:a11c
     ttl: 3600
-  # No AAAA yet for pve03's: add once its MAC is known.
   - name: jetkvm-pve02.management.agb.ingenstans.se
     zone: management.agb.ingenstans.se
     type: A
@@ -241,6 +240,11 @@ technitium_records:
     zone: management.agb.ingenstans.se
     type: A
     ipAddress: 10.1.10.23
+    ttl: 3600
+  - name: jetkvm-pve03.management.agb.ingenstans.se
+    zone: management.agb.ingenstans.se
+    type: AAAA
+    ipAddress: fd01:eae3:bc39:a:3252:53ff:fe0d:e2e2
     ttl: 3600
   # OPNsense's own address on the management VLAN (the gateway).
   - name: opnsense.management.agb.ingenstans.se
