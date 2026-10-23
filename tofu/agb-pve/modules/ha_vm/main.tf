@@ -92,3 +92,21 @@ resource "proxmox_virtual_environment_vm" "this" {
     ignore_changes = [node_name, disk, efi_disk, cdrom]
   }
 }
+
+# The provider's agent block has no freeze-fs option, so set it through the
+# API. By default replication (and backup) snapshots freeze the guest's
+# filesystems via the agent; HAOS routes that to the Supervisor, whose freeze
+# state wedges when jobs overlap and then refuses its own backups. Re-run
+# whenever the VM resource changes or is recreated, since an update could
+# rewrite the agent string. pvesh proxies to the node that owns the guest.
+resource "terraform_data" "freeze_fs" {
+  count = var.freeze_fs ? 0 : 1
+
+  provisioner "local-exec" {
+    command = "ssh root@${var.node_name}.management.agb.ingenstans.se pvesh set /nodes/${var.node_name}/qemu/${var.vm_id}/config --agent enabled=1,freeze-fs=0"
+  }
+
+  lifecycle {
+    replace_triggered_by = [proxmox_virtual_environment_vm.this]
+  }
+}

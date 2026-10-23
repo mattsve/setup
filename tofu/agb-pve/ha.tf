@@ -16,6 +16,9 @@ module "ha" {
   # fd01:eae3:bc39:32:216:3eff:fe3e:6e31
   mac_address = "00:16:3E:3E:6E:31"
 
+  # Replication freezing wedges the Supervisor (see modules/ha_vm).
+  freeze_fs = false
+
   cloud_init = false
   bios       = "ovmf"
   cpu_type   = "x86-64-v2-AES"

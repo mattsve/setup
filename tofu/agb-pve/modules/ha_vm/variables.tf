@@ -105,3 +105,9 @@ variable "nic_firewall" {
   type        = bool
   default     = false
 }
+
+variable "freeze_fs" {
+  description = "Let replication and backups freeze guest filesystems via the QEMU agent (set false for HAOS, see main.tf)"
+  type        = bool
+  default     = true
+}
