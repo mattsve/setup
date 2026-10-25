@@ -36,10 +36,7 @@
   tags: technitium_cert
 
 - name: Convert Let's Encrypt certificate to PKCS#12 for Technitium
-  # No `creates:` guard, same reasoning as certbot's own cert request task -
-  # this is cheap to re-run, and rebuilding it every play keeps it in sync
-  # with whatever certbot's live symlink currently points at rather than
-  # only refreshing on an actual renewal event.
+  # No `creates:` guard: cheap, and keeps the bundle in sync with certbot's live cert.
   command:
     cmd: >
       openssl pkcs12 -export
@@ -90,22 +87,16 @@
   when: technitium_tls_enabled | bool
   tags: technitium_tls_settings
 
-# Clustering (Technitium v14+). The primary owns all config (zones, records,
-# DNSSEC, blocking, apps, settings); a secondary joins and has that synced
-# onto it, which is why the zone/record/etc. tasks below are skipped there. Every task here is
-# a no-op unless technitium_cluster_role is set. Runs before the zone/record
-# tasks because init creates the cluster zone that records may live in.
-# Everything below talks to Technitium's API over HTTPS from the controller
-# (one request per call) rather than through `pct exec` on the guest, which
-# costs a connection plus a module transfer per call and made the record loop
-# painfully slow. The TLS settings task above stays on the in-container
-# localhost path since it is what turns HTTPS on in the first place.
+# Clustering (Technitium v14+). The primary owns all config; a secondary joins
+# and has it synced, so the zone/record/etc. tasks are skipped there. Cluster
+# tasks are no-ops unless technitium_cluster_role is set, and run before the
+# zone/record tasks because init creates the cluster zone.
 #
-# That remote path can't always work: on a rebuilt dns01 or a new dns02 the
-# node's name doesn't resolve yet (this very play creates the record), and a
-# controller outside the main VLAN can't reach the port at all. So the HTTPS
-# endpoint is probed first and the block falls back to localhost via the
-# guest, which is slower but always works.
+# Everything below calls the API over HTTPS from the controller, since `pct exec`
+# per call made the record loop painfully slow. The TLS-settings task above
+# stays on in-guest localhost because it is what turns HTTPS on. The HTTPS path
+# can fail (a rebuilt node's name doesn't resolve yet, or the controller is
+# outside the main VLAN), so it is probed first and falls back to localhost.
 - name: Probe the HTTPS API from the controller
   # Also covers the web service needing a moment to listen after the TLS
   # settings call above.

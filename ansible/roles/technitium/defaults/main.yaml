@@ -1,150 +1,103 @@
 ---
 technitium_install_script_url: "https://download.technitium.com/dns/install.sh"
 
-# Tasks run on dns01 itself (pct exec), so this is reachable on localhost
-# regardless of the guest's address. No port - the collection's modules
-# append their own api_port (default 5380) to this URL.
+# In-guest default (via pct exec). No port in the URL: the collection's modules
+# append api_port.
 technitium_api_url: "http://localhost"
 technitium_api_port: 5380
 
-# Whether the API tasks after the TLS setup run from the controller over
-# HTTPS (reaching the node as technitium_node_domain) instead of through the
-# guest. Set per play by tasks/main.yaml, which probes the endpoint and falls
-# back to the guest if it can't be reached; this default only matters when
-# those tasks are skipped (e.g. tagged out), where the guest path is safe.
+# Whether API tasks run from the controller over HTTPS instead. Set per play
+# by tasks/main.yaml after probing; the guest path is the safe default.
 technitium_api_remote: false
 
-# Generate via the web console (Administration > Sessions > Create Token) -
-# Ansible doesn't create this token itself. Actual value supplied via
-# group_vars/technitium.yaml.
+# Create via the web console (Administration > Sessions > Create Token); the
+# value comes from group_vars/technitium.yaml.
 technitium_api_token: ""
 
-# Supplied per host in host_vars/dns01.yaml, e.g.:
-#   - zone: hem.ingenstans.se
-#     type: Primary
+# zones, records, apps and DHCP scopes are supplied per host in host_vars/dns01.yaml
+# as lists of API-param maps for the matching collection module, e.g.
+#   technitium_zones: [{zone: agb.ingenstans.se, type: Primary}]
+#   technitium_records: [{name: x.agb.ingenstans.se, zone: agb.ingenstans.se, type: A, ipAddress: 10.1.50.61}]
 technitium_zones: []
-
-# Supplied per host in host_vars/dns01.yaml, e.g.:
-#   - name: plex.hem.ingenstans.se
-#     zone: hem.ingenstans.se
-#     type: A
-#     ipAddress: 10.1.50.61
 technitium_records: []
 
-# dns01 is tagged certbot (tofu/lxc_dns.tf) and holds its own cert rather
-# than being reverse-proxied - DNS-over-TLS is raw TLS-wrapped DNS, not
-# HTTP, so a caddy proxy in front of it couldn't terminate it anyway.
+# Terminate TLS on the host itself (DNS-over-TLS isn't HTTP, so caddy can't
+# proxy it). Enabled by the certbot tag.
 technitium_tls_enabled: "{{ 'certbot' in group_names }}"
 
 technitium_domain: "{{ inventory_hostname }}.hem.ingenstans.se"
 technitium_letsencrypt_dir: "/etc/letsencrypt/live/{{ technitium_domain }}"
 
-# Technitium requires the cert as a single PKCS#12 bundle rather than
-# separate fullchain.pem/privkey.pem files, so it's converted from
-# certbot's PEM output (tasks/main.yaml). Technitium watches the file's
-# mtime and reloads it itself, so the renewal hook only refreshes the file -
-# nothing needs restarting.
+# Technitium wants a single PKCS#12 bundle, converted from certbot's PEMs. It
+# reloads the file on mtime change, so the renewal hook needn't restart anything.
 technitium_cert_dir: /etc/dns/certs
 technitium_pfx_path: "{{ technitium_cert_dir }}/technitium.pfx"
-# PKCS#12 requires *a* password syntactically, but this file is only ever
-# read by Technitium's own service user off a 0600 path, so filesystem
-# permissions are what actually protect it.
+# Empty: PKCS#12 needs a password syntactically, but the 0600 file permissions
+# are the real protection.
 technitium_pfx_password: ""
 
-# Owns the PKCS#12 bundle above so dns.service can read it.
+# Owns the bundle so dns.service can read it.
 technitium_service_user: dns-server
 
-# Set explicitly (rather than left at Technitium's built-in defaults) so
-# they're documented here alongside tofu/firewall_dns.tf's rules.
+# Explicit so they sit next to the firewall rules in tofu/agb-pve/dns01.tf.
 technitium_web_service_https_port: 53443
 technitium_dns_over_tls_port: 853
 technitium_dns_over_https_port: 443
 
-# Supplied per host in host_vars/dns01.yaml, e.g. ["agb.ingenstans.se"].
-# Only Primary zones can be signed. technitium_dns_sign_zone errors if
-# called on an already-signed zone, so tasks/main.yaml checks each zone's
-# status first and only signs the ones still Unsigned.
+# Only Primary zones can be signed. Signing an already-signed zone errors, so
+# tasks/main.yaml only signs zones still Unsigned.
 technitium_dnssec_zones: []
 technitium_dnssec_algorithm: ECDSA
 technitium_dnssec_curve: P256
 technitium_dnssec_nx_proof: NSEC3
 
-# Supplied per host in host_vars/dns01.yaml, e.g.:
-#   - name: Query Logs (Sqlite)
-#     url: https://download.technitium.com/dns/apps/QueryLogsSqliteApp-v9.1.2.zip
+# [{name, url}] of DNS apps; bump the pinned url to upgrade.
 technitium_apps: []
 
-# One scope per VLAN, supplied per host in host_vars/dns01.yaml, e.g.:
-#   - name: iot
-#     startingAddress: 10.1.80.10
-#     endingAddress: 10.1.80.250
-#     subnetMask: 255.255.255.0
-#     routerAddress: 10.1.80.1
-# New scopes are created disabled by Technitium's API, so this role
-# explicitly enables each one after setting it up.
+# One scope per VLAN (API-param maps). The API creates scopes disabled, so the
+# role enables each one.
 technitium_dhcp_scopes: []
 
-# DNS-based blocking (ads/trackers/malware). Aggregated block list URLs are
-# supplied per host in host_vars/dns01.yaml, e.g.:
-#   technitium_block_list_urls:
-#     - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/hosts/pro.txt
+# DNS blocking. NxDomain so a blocked query behaves correctly for every record
+# type without a placeholder address.
 technitium_block_list_urls: []
 technitium_block_list_update_interval_hours: 24
-# NxDomain rather than AnyAddress/CustomAddress: a blocked query returns
-# "domain doesn't exist", which behaves correctly for every record type
-# without needing a placeholder address.
 technitium_blocking_type: NxDomain
-# Client IPs exempt from blocking entirely - e.g. a device that needs an
-# otherwise-blocked domain to work.
+# Client IPs exempt from blocking.
 technitium_blocking_bypass_list: []
-# Manually blocked/allowed domains, independent of the block lists above -
-# supplied per host, e.g.:
-#   technitium_blocked_zones: [doubleclick.net]
-#   technitium_allowed_zones: [some-domain-a-blocklist-overblocks.example.com]
-# Both are add-only (no state-based module exists for them, unlike
-# technitium_zones/technitium_records): removing an entry here doesn't
-# un-block/un-allow it on the server, that still needs a manual console
-# edit or technitium_dns_delete_blocked_zone/delete_allowed_zone run by hand.
+# Manual overrides, independent of the lists above. Add-only: removing an entry
+# doesn't un-block/un-allow it on the server (use the delete_*_zone modules or
+# the console).
 technitium_blocked_zones: []
 technitium_allowed_zones: []
-# Derives from whether there's anything to block, rather than a separate
-# manual flag, same pattern as technitium_tls_enabled above.
+# Derived from whether there is anything to block.
 technitium_blocking_enabled: "{{ (technitium_block_list_urls | length > 0) or (technitium_blocked_zones | length > 0) }}"
 
-# Clustering (Technitium v14+). Empty technitium_cluster_role = standalone.
-# Set per host in host_vars/: "primary" owns all config and is where zones,
-# records, DHCP, blocking, DNSSEC and apps are managed; "secondary" joins it
-# and has everything synced from it, so the role skips those tasks there.
+# Clustering (Technitium v14+). Empty role = standalone. The primary owns all
+# config; a secondary joins and has it synced, so config tasks are skipped there.
 technitium_cluster_role: ""
 technitium_manage_config: "{{ technitium_cluster_role != 'secondary' }}"
-# Identifies the cluster; becomes a Primary zone on the primary and cannot be
-# changed later.
+# Becomes a Primary zone on the primary; cannot be changed later.
 technitium_cluster_domain: ""
-# This node's own name inside the cluster; must be unique per node and
-# resolvable by the other nodes.
+# This node's name in the cluster: unique, and resolvable by the other nodes.
 technitium_node_domain: "{{ inventory_hostname }}.server.agb.ingenstans.se"
 # Static address(es) the other nodes reach this one on.
 technitium_node_ip_addresses: []
-# Secondary only: how to reach the primary's web service for the join.
+# Secondary only: how to reach the primary for the join.
 technitium_cluster_primary_url: ""
 technitium_cluster_primary_ip: ""
-# Secondary only: an administrator on the primary. The join call takes
-# credentials rather than an API token. Supplied via group_vars/technitium.yaml.
+# Secondary only: the join takes admin credentials, not an API token
+# (group_vars/technitium.yaml).
 technitium_cluster_admin_username: ""
 technitium_cluster_admin_password: ""
 
-# Technitium replicates zones to cluster secondaries only if they are members
-# of the cluster's catalog zone (cluster-catalog.<cluster domain>, created by
-# the cluster init). Zones that existed before the init are not members, and
-# the zone module never touches an existing zone's options, so the role sets
-# membership explicitly for every zone in technitium_zones plus these extras
-# (zones Technitium created itself, e.g. the reverse zones DHCP leases
-# register PTR records in).
+# Zones replicate to secondaries only if they are in the cluster catalog zone.
+# Zones that predate the init aren't, so the role adds every zone in
+# technitium_zones plus these extras (zones Technitium created itself, e.g. the
+# reverse zones for DHCP PTR records).
 technitium_cluster_extra_zones: []
 technitium_cluster_catalog: "{{ ('cluster-catalog.' ~ technitium_cluster_domain) if technitium_cluster_role == 'primary' else '' }}"
 
-# The name Technitium knows this node by inside a cluster. The cluster init
-# renames each node to <hostname>.<cluster domain> whatever was set before,
-# so the role must set exactly that or every run would fight the cluster.
-# Standalone nodes use technitium_node_domain.
+# Cluster init renames each node to <hostname>.<cluster domain>, so set exactly
+# that or every run fights the cluster. Standalone nodes use technitium_node_domain.
 technitium_dns_server_domain: "{{ (inventory_hostname ~ '.' ~ technitium_cluster_domain) if technitium_cluster_role | length > 0 else technitium_node_domain }}"

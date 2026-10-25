@@ -10,16 +10,13 @@ resource "proxmox_download_file" "debian_13_standard_pve02" {
   checksum           = "4c0c27ca6ceab5ef0b84db57825a00f26157ef1854bafe97297813e1cbe8ecb8cc9c453cab6b3b0efe1ba193a50c47ece1e41d950e411b8730b835b71e9e754b"
   checksum_algorithm = "sha512"
 
-  # Don't re-query the upstream URL's size on every refresh: the pinned
-  # checksum already guarantees the right content, and a slow or dead mirror
-  # shouldn't be able to hold up unrelated plans.
+  # Skip re-querying the URL on refresh; the pinned checksum guarantees content.
   overwrite = false
 }
 
-# Cloud-init vendor data installing qemu-guest-agent (see tofu/pve1/templates.tf).
-# Snippets live on each node's own "local" storage (needs the "snippets"
-# content type enabled), and the VM references it by path, so every node an
-# HA guest can fail over to needs its own copy.
+# Cloud-init vendor data installing qemu-guest-agent. Snippets live on each
+# node's own "local" storage (needs the "snippets" content type) and VMs
+# reference them by path, so every failover target needs a copy.
 resource "proxmox_virtual_environment_file" "vm_vendor_data" {
   for_each = toset(["pve01", "pve02", "pve03"])
 

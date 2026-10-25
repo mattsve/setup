@@ -14,10 +14,7 @@ certbot_domains:
 # group_vars/certbot.yaml.
 certbot_cloudflare_api_token: ""
 
-# certbot's own default (10s) is too short often enough to cause validation
-# failures - Cloudflare's anycast edge doesn't always converge on a
-# freshly-created record across every PoP that fast, and a validator query
-# that lands on a stale one gets an NXDOMAIN that's then negative-cached
-# for the zone's SOA minimum. Bumped to 30s (a real multi-domain request on
-# mqtt01 hit this) to reduce how often the race happens at all.
+# certbot's default (10s) is too short: Cloudflare may not have propagated the
+# new record everywhere, and a stale NXDOMAIN gets negative-cached. Bumped to
+# 30s after a multi-domain request on mqtt01 hit this.
 certbot_dns_cloudflare_propagation_seconds: 30

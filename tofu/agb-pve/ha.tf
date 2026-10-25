@@ -1,9 +1,6 @@
-# Home Assistant OS (VM 101). Moved from pve1 (tofu/pve1/vm_ha.tf) with its disk
-# intact via `qm remote-migrate`, then adopted here via `tofu import`
-# (module.ha.proxmox_virtual_environment_vm.this <node>/101) - see modules/ha_vm.
-# HAOS isn't a cloud-init guest, so cloud_init is off; its network (DHCP/SLAAC)
-# is configured inside HAOS. If it ever needs recreating, restore from the PBS
-# backup rather than applying this.
+# Home Assistant OS (VM 101). Moved from pve1 with `qm remote-migrate` and
+# adopted via `tofu import`. Not a cloud-init guest; its network is configured
+# inside HAOS. If it needs recreating, restore from the PBS backup.
 module "ha" {
   source = "./modules/ha_vm"
 
@@ -12,8 +9,7 @@ module "ha" {
   node_name = "pve02"
 
   bridge = proxmox_sdn_vnet.server.id
-  # Unchanged from pve1, so the SLAAC ULA stays
-  # fd01:eae3:bc39:32:216:3eff:fe3e:6e31
+  # Pinned: the SLAAC ULA (fd01:eae3:bc39:32:216:3eff:fe3e:6e31) derives from it.
   mac_address = "00:16:3E:3E:6E:31"
 
   # Replication freezing wedges the Supervisor (see modules/ha_vm).

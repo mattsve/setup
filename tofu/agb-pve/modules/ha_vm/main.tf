@@ -1,9 +1,7 @@
-# A QEMU VM on ZFS, replicated to other nodes and run under HA. Adopted rather
-# than created: it was moved here from another cluster with its disks intact,
-# so there is no source image and the disk is ignored. Cloud-init is declared
-# as on pve1 (the ansible user is what Ansible connects as). HA, not Tofu,
-# decides where it runs afterwards: node_name is only the creation node (see
-# ha_container for why).
+# A QEMU VM on ZFS, replicated to other nodes and run under HA. Adopted, not
+# created: moved in with its disks intact, so there is no source image and the
+# disk is ignored. The cloud-init `ansible` user is what Ansible connects as.
+# node_name is only the creation node (see ha_container).
 resource "proxmox_virtual_environment_vm" "this" {
   name      = var.name
   node_name = var.node_name
@@ -93,12 +91,10 @@ resource "proxmox_virtual_environment_vm" "this" {
   }
 }
 
-# The provider's agent block has no freeze-fs option, so set it through the
-# API. By default replication (and backup) snapshots freeze the guest's
-# filesystems via the agent; HAOS routes that to the Supervisor, whose freeze
-# state wedges when jobs overlap and then refuses its own backups. Re-run
-# whenever the VM resource changes or is recreated, since an update could
-# rewrite the agent string. pvesh proxies to the node that owns the guest.
+# The provider's agent block has no freeze-fs option, so set it via the API.
+# HAOS routes the snapshot freeze to its Supervisor, which wedges when jobs
+# overlap and then refuses its own backups. Re-runs when the VM changes, since
+# an update could rewrite the agent string. pvesh proxies to the owning node.
 resource "terraform_data" "freeze_fs" {
   count = var.freeze_fs ? 0 : 1
 

@@ -1,9 +1,6 @@
 ---
-# Both names validate via the same Cloudflare DNS-01 challenge: Cloudflare
-# hosts ingenstans.se itself (the only zone it's authoritative for here),
-# and both names are subdomains of that, not delegated elsewhere. Split-
-# horizon: Technitium (technitium_zones below) serves different, internal-
-# only answers for the same names via a separate path.
+# Both validate via Cloudflare DNS-01 (public ingenstans.se zone); Technitium
+# serves the internal answers for the same names (split horizon).
 certbot_domains:
   - dns.agb.ingenstans.se
   - dns01.server.agb.ingenstans.se
@@ -31,16 +28,11 @@ technitium_node_ip_addresses:
 technitium_zones:
   - zone: agb.ingenstans.se
     type: Primary
-  # Being retired in favor of agb.ingenstans.se, but still served for
-  # backwards compatibility.
+  # Being retired, still served for backwards compatibility.
   - zone: hem.ingenstans.se
     type: Primary
 
-  # One zone per VLAN, ordered by VLAN number. Each is its own Primary zone
-  # rather than a delegated child of agb.ingenstans.se (this instance is
-  # authoritative for all of them, so no NS records are needed), and each
-  # VLAN's DHCP leases auto-register in its own zone (dnsUpdates below), which
-  # keeps e.g. IoT hosts out of the general-server namespace.
+  # One Primary zone per VLAN; its DHCP leases auto-register here (dnsUpdates).
   - zone: management.agb.ingenstans.se # VLAN 10
     type: Primary
   - zone: storage.agb.ingenstans.se # VLAN 20
@@ -56,7 +48,7 @@ technitium_zones:
   - zone: main.agb.ingenstans.se # VLAN 100
     type: Primary
 
-# hem.ingenstans.se excluded - being retired, not worth signing.
+# hem.ingenstans.se excluded: being retired.
 technitium_dnssec_zones:
   - agb.ingenstans.se
   - server.agb.ingenstans.se
@@ -121,8 +113,7 @@ technitium_records:
     cname: l-space.storage.agb.ingenstans.se
     ttl: 3600
 
-  # Static hosts (dns01, pve01, pbs01) aren't DHCP leases, so dnsUpdates never
-  # registers them - their A/AAAA records are added by hand.
+  # Static hosts aren't DHCP leases, so their A/AAAA records are added by hand.
   - name: dns01.server.agb.ingenstans.se
     zone: server.agb.ingenstans.se
     type: A
@@ -145,9 +136,8 @@ technitium_records:
     ipAddress: fd01:eae3:bc39:32:be24:11ff:fef8:dc3c
     ttl: 3600
 
-  # DHCP-addressed hosts: only the AAAA is added by hand. dnsUpdates registers
-  # the lease's A record, but IPv6 is SLAAC-derived, not DHCP-assigned (see
-  # CLAUDE.md's IPv6 addressing section).
+  # DHCP-addressed hosts: dnsUpdates registers the A record, but IPv6 is SLAAC,
+  # so only the AAAA is added by hand.
   - name: reverse-proxy01.server.agb.ingenstans.se
     zone: server.agb.ingenstans.se
     type: AAAA
@@ -258,9 +248,7 @@ technitium_records:
     ipAddress: fd01:eae3:bc39:a::1
     ttl: 3600
 
-  # l-space lives on the storage VLAN (static lease in the storage scope, so
-  # dnsUpdates registers its A record); only the AAAA is added by hand,
-  # SLAAC EUI-64 from its MAC (VLAN 20 -> /64 ...:14::/64).
+  # l-space: A comes from its static lease; AAAA is SLAAC EUI-64 from its MAC.
   - name: l-space.storage.agb.ingenstans.se
     zone: storage.agb.ingenstans.se
     type: AAAA
@@ -304,10 +292,8 @@ technitium_dhcp_scopes:
     subnetMask: 255.255.255.0
     routerAddress: 10.1.10.1
     domainName: management.agb.ingenstans.se
-    # domainName alone (DHCP option 15) is also what clients used as their
-    # search domain, so they'd search only this VLAN's zone rather than the
-    # friendlier agb.ingenstans.se - domainSearchList (option 119) is the
-    # separate, client-facing search-suffix list. Same split on every scope.
+    # domainName (option 15) alone would make clients search only this VLAN's
+    # zone; domainSearchList (option 119) sets the search suffix. Same on every scope.
     domainSearchList:
       - agb.ingenstans.se
     dnsUpdates: true
@@ -344,18 +330,13 @@ technitium_dhcp_scopes:
     endingAddress: 10.1.50.250
     subnetMask: 255.255.255.0
     routerAddress: 10.1.50.1
-    # dnsUpdates registers an A/PTR record per lease under this zone. If
-    # leases aren't showing up, check the zone's own Dynamic Updates setting
-    # in the Technitium console too - the scope option alone may not be enough.
+    # If leases don't register, also check the zone's Dynamic Updates setting.
     domainName: server.agb.ingenstans.se
     domainSearchList:
       - agb.ingenstans.se
     dnsUpdates: true
-    # Explicit servers rather than Technitium's own default DNS option (a
-    # stale OPNsense address), which is unreachable the same way dns01's own
-    # resolver was (see tofu/agb-pve/dns01.tf): OPNsense's resolver replies from a
-    # different source address than the one queried, so the reply gets
-    # silently dropped.
+    # Explicit servers: Technitium's default is a stale OPNsense address that
+    # hits the source-address mismatch (see CLAUDE.md's nameserver gotcha).
     useThisDnsServer: false
     dnsServers: "{{ technitium_dhcp_dns_servers }}"
 
@@ -444,10 +425,8 @@ technitium_dhcp_scopes:
     dnsUpdates: false
     useThisDnsServer: false
     dnsServers: "{{ technitium_dhcp_dns_servers }}"
-    # Option 43 (vendor-specific info) for UniFi device adoption, sent only to
-    # clients whose vendor class is "ubnt". Sub-option 01, length 4, then the
-    # controller's IP (10.1.10.50 = 0A:01:0A:32, the cloudkey's reservation on
-    # the management scope).
+    # Option 43 for UniFi adoption, sent to vendor class "ubnt": sub-option 01,
+    # length 4, controller IP 10.1.10.50 (the cloudkey) = 0A:01:0A:32.
     vendorInfo:
       - identifier: ubnt
         information: "01:04:0A:01:0A:32"

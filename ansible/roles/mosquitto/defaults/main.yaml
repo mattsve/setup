@@ -1,20 +1,16 @@
 ---
-# Domain the TLS cert was issued for - lines up with the cert the certbot
-# role already requested for this host.
+# Must match the cert the certbot role requested for this host.
 mosquitto_domain: "{{ inventory_hostname }}.hem.ingenstans.se"
 
-# Only makes sense if certbot issued a cert for this host - derived from
-# group membership rather than a separate flag.
+# TLS only if certbot issued a cert (certbot group).
 mosquitto_tls_enabled: "{{ 'certbot' in group_names }}"
 mosquitto_tls_port: 8883
 
-# Manual flag, not derived from mosquitto_users: flipping it the moment a
-# user is added would lock out any anonymous client not yet migrated. Now
-# false - every client in use has credentials.
+# Manual, not derived from mosquitto_users: that would lock out anonymous
+# clients the moment the first user is added.
 mosquitto_allow_anonymous: false
 
-# Populate via group_vars/mosquitto.yaml (1Password-backed) - list of
-# {username, password} maps. Empty by default so this stays opt-in.
+# [{username, password}], from group_vars/mosquitto.yaml (1Password). Opt-in.
 mosquitto_users: []
 mosquitto_passwd_file: /etc/mosquitto/passwd
 
@@ -24,8 +20,7 @@ mosquitto_plain_port: 1883
 # Where certbot put the live cert.
 mosquitto_letsencrypt_dir: "/etc/letsencrypt/live/{{ mosquitto_domain }}"
 
-# Local copy mosquitto's unprivileged user can actually read - the
-# /etc/letsencrypt archive directory isn't traversable by non-root.
+# Copy readable by mosquitto's user (the letsencrypt archive dir is root-only).
 mosquitto_cert_dir: /etc/mosquitto/certs
 
 mosquitto_service: mosquitto

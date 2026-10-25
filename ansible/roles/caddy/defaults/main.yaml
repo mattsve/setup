@@ -4,26 +4,22 @@
 caddy_apt_key_url: "https://dl.cloudsmith.io/public/caddy/stable/gpg.key"
 caddy_apt_repo_uri: "https://dl.cloudsmith.io/public/caddy/stable/deb/debian"
 
-# Cert this host requests via the certbot role - a wildcard covering every
-# vhost it fronts (see host_vars/reverse-proxy01.yaml), not just its own name.
+# Wildcard cert from the certbot role covering every vhost (see
+# host_vars/reverse-proxy01.yaml), not just this host's name.
 caddy_domain: "hem.ingenstans.se"
 caddy_letsencrypt_dir: "/etc/letsencrypt/live/{{ caddy_domain }}"
 
-# Local copy caddy's unprivileged user can actually read - the
-# /etc/letsencrypt archive directory isn't traversable by non-root.
+# Copy readable by caddy's user (the letsencrypt archive dir is root-only).
 caddy_cert_dir: /etc/caddy/certs
 
 caddy_service: caddy
 
-# Reverse-proxy routes, supplied per host (host_vars/reverse-proxy01.yaml):
+# Routes, supplied per host (host_vars/reverse-proxy01.yaml):
 #   - hostname: plex.hem.ingenstans.se
-#     backend: 10.1.50.60:32400    # or a list of backends: load-balanced
-#                                  # (cookie, so a browser sticks to one
-#                                  # backend) with active health checks
-#     backend_scheme: http         # optional, defaults to http
+#     backend: 10.1.50.60:32400    # or a list: load-balanced (sticky cookie)
+#                                  # with active health checks
+#     backend_scheme: http         # optional
 #     backend_tls_insecure: false  # optional, for self-signed backend certs
-#     backend_host_header: false   # optional, forwards the original Host
-#                                  # header instead of the backend's own -
-#                                  # needed by backends (e.g. UniFi) that
-#                                  # validate/redirect on Host
+#     backend_host_header: false   # optional, forward the original Host header
+#                                  # (needed by e.g. UniFi)
 caddy_proxies: []

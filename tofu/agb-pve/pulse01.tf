@@ -1,8 +1,5 @@
 # Pulse monitoring dashboard (installed by the ansible `pulse` role). Recreated
-# here rather than migrated from pve1 (tofu/pve1/lxc_pulse.tf): it holds no
-# state worth carrying over, so the MAC is reused (keeping the SLAAC ULA) and
-# the role reinstalls it. Destroy the pve1 copy before applying this, since
-# the MAC and hostname would otherwise collide - see modules/ha_container.
+# rather than migrated, as it holds no state worth carrying over.
 module "pulse01" {
   source = "./modules/ha_container"
 
@@ -13,31 +10,26 @@ module "pulse01" {
   template_file_id = proxmox_download_file.debian_13_standard_pve02.id
 
   bridge = proxmox_sdn_vnet.server.id
-  # Unchanged from pve1, so the SLAAC ULA stays
-  # fd01:eae3:bc39:32:be24:11ff:fef7:4b74
+  # Pinned: the SLAAC ULA (fd01:eae3:bc39:32:be24:11ff:fef7:4b74) derives from it.
   mac_address = "BC:24:11:F7:4B:74"
-  # DHCP (module default) - dnsUpdates registers the lease as
-  # pulse01.server.agb.ingenstans.se (host_vars/dns01.yaml).
+  # DHCP (module default); the lease registers in DNS via dnsUpdates.
 
   tags = ["managed-updates", "autologin", "pulse"]
 
-  # DHCP-addressed on VLAN 50, which dns01/dns02 serve - needs them
-  # (order=1) up first to get a lease at all.
+  # Needs dns01/dns02 (order=1) up first to get a DHCP lease.
   startup = {
     order    = 2
     up_delay = 0
   }
 
   cores = 2
-  # 512 wasn't enough - the install script's extraction/setup step got
-  # OOM-killed (rc 137, no output) at that size.
+  # 512 wasn't enough: the install script was OOM-killed (rc 137).
   memory    = 1024
   swap      = 256
   disk_size = 2
 
-  # Pulse is unauthenticated by default, so only reverse-proxy01 (via its
-  # stable VLAN 50 ULA, the address its caddy_proxies pulse backend connects
-  # from, host_vars/reverse-proxy01.yaml) may reach the dashboard.
+  # Pulse is unauthenticated, so only reverse-proxy01 (by its stable ULA) may
+  # reach it.
   firewall_rules = [
     {
       proto   = "tcp"

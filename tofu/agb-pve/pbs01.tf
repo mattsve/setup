@@ -1,14 +1,10 @@
-# Proxmox Backup Server, moved from pve1 (tofu/pve1/vm_pbs.tf) with its disks
-# intact and adopted here via `tofu import`
-# (module.pbs01.proxmox_virtual_environment_vm.this <node>/102). It was
-# installed by hand from the PBS ISO, so there's no source image or cloud-init:
-# the module's disk/efi_disk/cdrom are ignored, and the guest's network config
-# lives inside PBS itself.
+# Proxmox Backup Server, moved from pve1 and adopted via `tofu import`. It was
+# installed by hand from the PBS ISO, so there is no source image or cloud-init;
+# disk/efi_disk/cdrom are ignored and its network config lives inside PBS.
 #
-# On the storage VLAN (VLAN 20) instead of management, statically addressed
-# inside the guest at 10.1.20.2/24 (gateway 10.1.20.1) - not DHCP, so it never
-# depends on dns01 being up to be reachable for restores. MAC unchanged, so
-# its SLAAC ULA there is fd01:eae3:bc39:14:be24:11ff:fea5:71cb.
+# On the storage VLAN (20), static 10.1.20.2/24 inside the guest (gateway
+# 10.1.20.1) so restores never depend on dns01. MAC pinned; ULA is
+# fd01:eae3:bc39:14:be24:11ff:fea5:71cb.
 module "pbs01" {
   source = "./modules/ha_vm"
 
