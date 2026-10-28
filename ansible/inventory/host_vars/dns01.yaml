@@ -270,7 +270,8 @@ technitium_apps:
     url: https://download.technitium.com/dns/apps/QueryLogsSqliteApp-v9.1.2.zip
 
 technitium_block_list_urls:
-  - https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/multi-onlydomains.txt
+  - https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/pro-onlydomains.txt
+  - https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt
 
 # Handed out to DHCP clients on every scope, dns01 first so it stays the
 # preferred resolver and dns02 (the cluster secondary) is the failover.
