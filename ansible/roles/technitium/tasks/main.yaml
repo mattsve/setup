@@ -16,6 +16,9 @@
 
 - name: Run Technitium DNS Server install script
   command: /tmp/technitium-install.sh
+  # The installer restarts the service, so do one node at a time to keep DNS
+  # answering from the other.
+  throttle: 1
   tags: technitium_install
 
 - name: Enable and start Technitium DNS Server
@@ -23,6 +26,7 @@
     name: dns
     state: started
     enabled: true
+  throttle: 1
   tags: technitium_install
 
 - name: Create local cert directory for Technitium's PKCS#12 bundle
