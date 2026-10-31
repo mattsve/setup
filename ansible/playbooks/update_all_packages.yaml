@@ -33,6 +33,8 @@
         reboot_timeout: 600
         pre_reboot_delay: 0
         post_reboot_delay: 30
+      # One host at a time so redundant guests (dns01/dns02) never restart together.
+      throttle: 1
       when: >-
         (ansible_facts.pkg_mgr == "apt" and reboot_required.stat.exists) or
         (ansible_facts.pkg_mgr == "dnf" and needs_restart.rc | default(-1) == 1)
