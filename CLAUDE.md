@@ -40,7 +40,7 @@ op run --env-file .env -- tofu apply
 **Connections** are set per group in `group_vars`: LXCs use `proxmox_pct_remote` (`pct exec`, no SSH); nodes use SSH as root, with `ansible_host` derived from `inventory_hostname` (`<name>.management.agb.ingenstans.se`, a CNAME to the `pveNN` record).
 
 **Group membership is the switch.** `inventory/groups.yaml` defines groups that playbooks target with plain `hosts: <group>` and no `when:` gate:
-- Tag aliases (`managed_updates`, `certbot`, `mosquitto`, `autologin`, `ssh`, `plex`, `caddy`, `technitium`, `pulse`) are `children: [proxmox_tags_<tag>]`. Enabling a role on a guest means tagging it in Proxmox (tags are in Tofu), with no inventory edit. New single-purpose apps should follow this.
+- Tag aliases (`managed_updates`, `certbot`, `mosquitto`, `autologin`, `ssh`, `plex`, `caddy`, `technitium`, `pulse`, `forgejo`) are `children: [proxmox_tags_<tag>]`. Enabling a role on a guest means tagging it in Proxmox (tags are in Tofu), with no inventory edit. New single-purpose apps should follow this.
 - `postfix_relay` = `proxmox_nodes`; `unused_services` = `proxmox_all_lxc` (unconditional); `nut` = explicit host `pve1` (tied to the physical USB UPS).
 - `ssh` is an escape hatch: `unused_services` disables sshd on every LXC unless the guest is tagged `ssh`.
 - `timezone.yaml` is the one exception and targets `hosts: all`.

@@ -82,6 +82,11 @@ technitium_records:
     type: CNAME
     cname: mqtt01.server.agb.ingenstans.se
     ttl: 3600
+  - name: git.agb.ingenstans.se
+    zone: agb.ingenstans.se
+    type: CNAME
+    cname: reverse-proxy01.server.agb.ingenstans.se
+    ttl: 3600
   - name: opnsense.agb.ingenstans.se
     zone: agb.ingenstans.se
     type: CNAME
@@ -152,6 +157,11 @@ technitium_records:
     zone: server.agb.ingenstans.se
     type: AAAA
     ipAddress: fd01:eae3:bc39:32:be24:11ff:fe42:31c4
+    ttl: 3600
+  - name: git01.server.agb.ingenstans.se
+    zone: server.agb.ingenstans.se
+    type: AAAA
+    ipAddress: fd01:eae3:bc39:32:be24:11ff:fea7:3c5e
     ttl: 3600
 
   - name: pve01.management.agb.ingenstans.se

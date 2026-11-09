@@ -41,3 +41,5 @@ caddy_proxies:
   - hostname: hass.agb.ingenstans.se
     backend: "[fd01:eae3:bc39:32:216:3eff:fe3e:6e31]:8123"
     backend_scheme: http
+  - hostname: git.agb.ingenstans.se
+    backend: "[fd01:eae3:bc39:32:be24:11ff:fea7:3c5e]:3000"

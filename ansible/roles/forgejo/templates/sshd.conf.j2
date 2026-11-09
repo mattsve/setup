@@ -1,0 +1,6 @@
+# Only the git user may log in; Forgejo's forced command in authorized_keys
+# restricts it to git operations. Ansible reaches the guest via pct exec.
+AllowUsers {{ forgejo_user }}
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no

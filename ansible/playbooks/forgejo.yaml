@@ -1,0 +1,11 @@
+---
+- name: Install Forgejo
+  hosts: forgejo
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Import forgejo role
+      import_role:
+        name: forgejo
+      tags: forgejo

@@ -54,6 +54,10 @@ pulse:
   children:
     proxmox_tags_pulse:
 
+forgejo:
+  children:
+    proxmox_tags_forgejo:
+
 # Per-cluster groups. The plugin's `groups` option covers guests but skips
 # nodes, so nodes are listed by hand (groups merge across sources). Add a line
 # when a node joins a cluster.

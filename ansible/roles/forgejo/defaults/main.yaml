@@ -1,0 +1,42 @@
+---
+# Pinned to the LTS line (see forgejo.org release schedule): bump to upgrade.
+# The role re-downloads when the checksum changes.
+forgejo_version: "15.0.11"
+forgejo_download_url: "https://codeberg.org/forgejo/forgejo/releases/download/v{{ forgejo_version }}/forgejo-{{ forgejo_version }}-linux-amd64"
+
+forgejo_user: git
+forgejo_home: /home/git
+forgejo_work_dir: /var/lib/forgejo
+forgejo_config_dir: /etc/forgejo
+forgejo_config: "{{ forgejo_config_dir }}/app.ini"
+
+# Web UI is served by reverse-proxy01 (host_vars/reverse-proxy01.yaml), which
+# terminates TLS, so no certbot here.
+forgejo_domain: git.agb.ingenstans.se
+forgejo_http_port: 3000
+
+# git@ clones go straight to this guest, not through Caddy (HTTP only), so the
+# SSH name is the guest's own record rather than the friendly web CNAME.
+forgejo_ssh_domain: "{{ inventory_hostname }}.server.agb.ingenstans.se"
+
+# Written with ini_file, not a template: Forgejo generates SECRET_KEY,
+# INTERNAL_TOKEN and the JWT secrets into app.ini on first start, and a
+# templated file would discard them on the next run.
+forgejo_settings:
+  - { section: "", option: APP_NAME, value: Forgejo }
+  - { section: "", option: RUN_USER, value: "{{ forgejo_user }}" }
+  - { section: "", option: RUN_MODE, value: prod }
+  - { section: "", option: WORK_PATH, value: "{{ forgejo_work_dir }}" }
+  - { section: server, option: DOMAIN, value: "{{ forgejo_domain }}" }
+  - { section: server, option: ROOT_URL, value: "https://{{ forgejo_domain }}/" }
+  - { section: server, option: HTTP_ADDR, value: "::" }
+  - { section: server, option: HTTP_PORT, value: "{{ forgejo_http_port }}" }
+  - { section: server, option: SSH_DOMAIN, value: "{{ forgejo_ssh_domain }}" }
+  - { section: server, option: SSH_PORT, value: "22" }
+  - { section: server, option: START_SSH_SERVER, value: "false" }
+  - { section: database, option: DB_TYPE, value: sqlite3 }
+  - { section: database, option: PATH, value: "{{ forgejo_work_dir }}/data/forgejo.db" }
+  - { section: security, option: INSTALL_LOCK, value: "true" }
+  - { section: service, option: DISABLE_REGISTRATION, value: "true" }
+  - { section: service, option: REQUIRE_SIGNIN_VIEW, value: "true" }
+  - { section: log, option: ROOT_PATH, value: "{{ forgejo_work_dir }}/log" }

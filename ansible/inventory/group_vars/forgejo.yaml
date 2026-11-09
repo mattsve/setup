@@ -1,0 +1,7 @@
+---
+# First admin account, from the "forgejo" 1Password item in the agb vault
+# (fields: username, email, password). Registration is disabled, so this is
+# the only way in until more users are added in the UI.
+forgejo_admin_username: "{{ lookup('community.general.onepassword', 'op://agb/forgejo/username') }}"
+forgejo_admin_email: "{{ lookup('community.general.onepassword', 'op://agb/forgejo/email') }}"
+forgejo_admin_password: "{{ lookup('community.general.onepassword', 'op://agb/forgejo/password') }}"
