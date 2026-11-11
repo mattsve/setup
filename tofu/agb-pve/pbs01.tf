@@ -20,6 +20,10 @@ module "pbs01" {
   cpu_type   = "x86-64-v2-AES"
   cloud_init = false
 
+  # A replication freeze racing another agent call can leave the guest frozen
+  # (thaw fails with "wrong command id"), which hangs every backup into PBS.
+  freeze_fs = false
+
   cores     = 4
   memory    = 4096
   disk_size = 50
